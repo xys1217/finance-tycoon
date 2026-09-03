@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>情绪与资金流 · 12 路数据源</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#0f1218;color:#e8eaed;padding:20px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;margin-bottom:4px}
+.sub{color:#9aa0a6;font-size:13px;margin-bottom:18px}
+.panel{background:#171b22;border:1px solid #262b34;border-radius:12px;padding:18px;margin-bottom:18px}
+h2{font-size:17px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:8px}
+h2::before{content:"";width:3px;height:16px;background:#1a73e8;border-radius:2px}
+.bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.kpi{flex:1;min-width:140px;background:#1e232b;border-radius:10px;padding:12px 14px}
+.kpi label{display:block;color:#9aa0a6;font-size:12px;margin-bottom:4px}
+.kpi b{font-size:20px;color:#fff}
+.kpi .g{color:#4caf50} .kpi .r{color:#ef5350} .kpi .b{color:#42a5f5} .kpi .y{color:#ffb74d}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:12px}
+.src{background:#1a1f27;border:1px solid #2a3038;border-radius:11px;padding:13px 14px;border-left:3px solid #3a4048}
+.src.ok{border-left-color:#4caf50}
+.src.warn{border-left-color:#ff9800}
+.src.bad{border-left-color:#ef5350}
+.src .hd{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.src .hd b{font-size:14px;color:#fff}
+.src .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.src.ok .dot{background:#4caf50;box-shadow:0 0 6px #4caf50}
+.src.warn .dot{background:#ff9800;box-shadow:0 0 6px #ff9800}
+.src.bad .dot{background:#ef5350}
+.src .meta{display:flex;gap:10px;font-size:11px;color:#8b9199;margin-bottom:7px;flex-wrap:wrap}
+.src .meta span{background:#141920;padding:2px 7px;border-radius:6px}
+.src .err{font-size:11.5px;color:#e57373;background:rgba(229,57,53,.08);padding:6px 8px;
+  border-radius:6px;word-break:break-all;line-height:1.45}
+.src .top{font-size:11.5px;color:#9aa0a6;margin-top:7px}
+.src .top code{background:#141920;padding:1px 5px;border-radius:4px;color:#64b5f6;
+  font-family:ui-monospace,Menlo,monospace;margin-right:3px}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#1e232b;color:#9aa0a6;text-align:left;padding:9px 10px;font-weight:500}
+.tbl td{padding:9px 10px;border-top:1px solid #262b34}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;margin:1px 3px 1px 0}
+.t-em{background:rgba(26,115,232,.18);color:#64b5f6}
+.t-xq{background:rgba(76,175,80,.16);color:#81c784}
+.t-news{background:rgba(255,152,0,.18);color:#ffb74d}
+.t-page{background:rgba(233,30,99,.16);color:#f06292}
+.warn{background:rgba(255,152,0,.10);border-left:3px solid #ff9800;padding:11px 14px;
+  border-radius:0 8px 8px 0;font-size:13px;color:#ffcc80;margin-top:12px}
+.empty{background:#1a1f27;border:1px dashed #3a4048;border-radius:10px;padding:16px;
+  color:#9aa0a6;font-size:13px}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.foot{color:#6b7280;font-size:12px;text-align:center;padding:16px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>情绪与资金流 · 12 路数据源</h1>
+<div class="sub">散户情绪 / 资金关注 / 消息热度 —— 为「热点仓 + 三道不追高闸门」提供<b>情绪侧交叉验证</b>。
+本模块<b>不直接产生交易信号</b>，信号仍由量化策略模块产出。</div>
+
+<div class="panel">
+  <h2>源健康度总览</h2>
+  <div class="bar" id="kpis"><div class="kpi"><label>加载中…</label><b>—</b></div></div>
+  <div id="srcGrid" class="grid"></div>
+  <div id="note" style="margin-top:12px"></div>
+</div>
+
+<div class="panel">
+  <h2>跨源热度合并榜（Top 20）</h2>
+  <div class="legend" style="font-size:12px;color:#9aa0a6;margin-bottom:8px">
+    ℹ️ 合成方法：每只票在<b>各源内</b>先转 0~1 排名分，再按源<b>等权平均</b>。
+    出现在越多源、排名越靠前，得分越高。<b>已剔除科创板/北交所/B股</b>与页面误抓的伪代码。
+  </div>
+  <div id="rankWrap"><div class="empty">等待数据…</div></div>
+</div>
+
+<div class="foot" id="foot">—</div>
+
+<script>
+const GRP = {
+  "em_comment":"em","em_hot_rank":"em","em_notice":"em",
+  "xq_follow":"xq","xq_tweet":"xq","xq_deal":"xq",
+  "cls_news":"news","ths_news":"news","jin10":"news",
+  "gelonghui":"page","taoguba":"page","jiuyangongshe":"page"
+};
+const GRPTAG = {
+  em:['t-em','东方财富'], xq:['t-xq','雪球'],
+  news:['t-news','资讯电报'], page:['t-page','社区页面']
+};
+
+async function load(){
+  let d;
+  try{
+    const r = await fetch('../api/sentiment_status.json?t=' + Date.now());
+    d = await r.json();
+  }catch(e){
+    document.getElementById('srcGrid').innerHTML =
+      '<div class="empty">未找到数据文件 <code>web/api/sentiment_status.json</code>。' +
+      '请先运行 <code>python3 web/modules/sentiment/dump_status.py</code> 采集一次。</div>';
+    return;
+  }
+
+  const st = d.status || {}, merged = d.merged || [], meta = d.meta || {};
+  const names = Object.keys(st);
+  const okN = names.filter(n=>st[n].ok && st[n].rows>0).length;
+  const weakN = names.filter(n=>st[n].ok && st[n].rows===0).length;
+  const badN = names.length - okN - weakN;
+  const cov = meta.universe || 0;
+  const ms = names.reduce((a,n)=>a+(st[n].ms||0),0);
+
+  document.getElementById('kpis').innerHTML = `
+    <div class="kpi"><label>接通源</label><b class="g">${okN} / ${names.length}</b></div>
+    <div class="kpi"><label>空数据(连通无票)</label><b class="y">${weakN}</b></div>
+    <div class="kpi"><label>失败</label><b class="${badN?'r':'g'}">${badN}</b></div>
+    <div class="kpi"><label>覆盖个股</label><b class="b">${cov}</b></div>
+    <div class="kpi"><label>总耗时</label><b>${(ms/1000).toFixed(1)}s</b></div>`;
+
+  document.getElementById('srcGrid').innerHTML = names.map(n=>{
+    const s = st[n], g = GRP[n] || 'page', [tc,gl] = GRPTAG[g];
+    const cls = !s.ok ? 'bad' : (s.rows>0 ? 'ok' : 'warn');
+    const top = (d.top && d.top[n]) ? Object.keys(d.top[n]).slice(0,6)
+      .map(c=>`<code>${c}</code>`).join('') : '';
+    return `<div class="src ${cls}">
+      <div class="hd"><span class="dot"></span><b>${s.label||n}</b></div>
+      <div class="meta">
+        <span class="tag ${tc}">${gl}</span>
+        <span>${s.rows||0} 条</span>
+        <span>${s.ms||0}ms</span>
+      </div>
+      ${s.error ? `<div class="err">${s.error}</div>` : ''}
+      ${top ? `<div class="top">Top: ${top}</div>` : ''}
+    </div>`;
+  }).join('');
+
+  if(merged.length){
+    document.getElementById('rankWrap').innerHTML = `
+      <table class="tbl"><thead><tr>
+        <th>#</th><th>代码</th><th>合成热度</th><th>命中源数</th><th>命中的源</th>
+      </tr></thead><tbody>${merged.slice(0,20).map((r,i)=>`
+        <tr><td>${i+1}</td>
+        <td><b>${r.code}</b></td>
+        <td><b style="color:#42a5f5">${r.score.toFixed(3)}</b></td>
+        <td>${r.nsrc}</td>
+        <td style="font-size:11px;color:#9aa0a6">${r.srcs.join(' · ')}</td></tr>`).join('')}
+      </tbody></table>`;
+  }else{
+    document.getElementById('rankWrap').innerHTML =
+      '<div class="empty">本轮未产出有效个股热度。</div>';
+  }
+
+  document.getElementById('foot').textContent =
+    `采集时间 ${d.ts || '—'} · 数据源 AkShare / 东方财富 / 雪球 / 财联社 / 同花顺 / 金十 · 仅供研究`;
+}
+load();
+</script>
+</body></html>

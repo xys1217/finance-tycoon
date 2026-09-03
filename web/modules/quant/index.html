@@ -1,0 +1,444 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>每日盯盘 · 2026-09-02</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#0f1218;color:#e8eaed;padding:20px;line-height:1.6}
+.wrap{max-width:1180px;margin:0 auto}
+h1{font-size:24px;margin-bottom:4px}
+.sub{color:#9aa0a6;font-size:13px;margin-bottom:18px}
+.panel{background:#171b22;border:1px solid #262b34;border-radius:12px;padding:18px;margin-bottom:18px}
+h2{font-size:17px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:8px}
+h2::before{content:"";width:3px;height:16px;background:#1a73e8;border-radius:2px}
+.bar{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.kpi{flex:1;min-width:150px;background:#1e232b;border-radius:10px;padding:12px 14px}
+.kpi label{display:block;color:#9aa0a6;font-size:12px;margin-bottom:4px}
+.kpi b{font-size:20px;color:#fff}
+.kpi .g{color:#4caf50} .kpi .r{color:#ef5350} .kpi .b{color:#42a5f5}
+.gauge{height:10px;background:#2a2f38;border-radius:5px;overflow:hidden;display:flex;margin:10px 0 6px}
+.gauge i{display:block;height:100%}
+.gauge .used{background:linear-gradient(90deg,#1a73e8,#42a5f5)}
+.gauge .free{background:#3a4048}
+.legend{font-size:12px;color:#9aa0a6}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#1e232b;color:#9aa0a6;text-align:left;padding:9px 10px;font-weight:500}
+.tbl td{padding:9px 10px;border-top:1px solid #262b34}
+tr.sell{background:rgba(229,57,53,.10)} tr.half{background:rgba(255,167,38,.10)}
+.code{color:#9aa0a6;font-size:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}
+.card{background:#1a1f27;border:1px solid #2a3038;border-radius:12px;padding:15px}
+.card.hot{border-left:3px solid #ff9800} .card.val{border-left:3px solid #1a73e8}
+.card.gold{border-left:3px solid #d4a017}
+.drv{font-size:11px;padding:3px 9px;border-radius:10px;margin-left:6px;vertical-align:middle}
+.dh{background:rgba(255,152,0,.20);color:#ffb74d}
+.dv{background:rgba(26,115,232,.20);color:#64b5f6}
+.dg{background:rgba(212,160,23,.22);color:#ffd54f}
+.card-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.card-hd b{font-size:16px}
+.rank{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;background:#1a73e8;
+color:#fff;border-radius:6px;font-size:12px;margin-right:8px}
+.ind{font-size:11px;color:#9aa0a6;background:#252b34;padding:3px 8px;border-radius:10px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}
+.grid>div{background:#141920;border-radius:8px;padding:8px 10px}
+.grid label{display:block;color:#8b9199;font-size:11px;margin-bottom:2px}
+.grid b{font-size:15px;color:#fff}
+.grid small{color:#9aa0a6;font-size:10px;font-weight:400}
+.qt{display:block;color:#8b9199;font-size:10px;margin-top:3px;font-weight:400}
+.buy{color:#42a5f5!important} .sl{color:#ef5350!important} .tp{color:#66bb6a!important}
+.logic{background:#141920;border-radius:8px;padding:10px;margin-bottom:10px;font-size:13px}
+.logic label{display:block;color:#8b9199;font-size:11px;margin-bottom:4px}
+.tags{margin-bottom:8px}
+.tag{display:inline-block;font-size:11px;padding:3px 9px;border-radius:10px;margin:2px 4px 2px 0}
+.t-value{background:rgba(26,115,232,.18);color:#64b5f6}
+.t-gold{background:rgba(212,160,23,.20);color:#ffd54f}
+.t-def{background:rgba(102,187,106,.16);color:#81c784}
+.t-hot{background:rgba(255,152,0,.18);color:#ffb74d}
+.t-flow{background:rgba(233,30,99,.16);color:#f06292}
+.t-risk{background:rgba(229,57,53,.16);color:#e57373}
+.ff{font-size:12px;color:#9aa0a6;border-top:1px solid #262b34;padding-top:8px}
+.empty{background:#1a1f27;border:1px dashed #3a4048;border-radius:10px;padding:16px;color:#9aa0a6;font-size:13px}
+.warn{background:rgba(255,152,0,.10);border-left:3px solid #ff9800;padding:11px 14px;border-radius:0 8px 8px 0;
+font-size:13px;color:#ffcc80;margin-top:12px}
+.foot{color:#6b7280;font-size:12px;text-align:center;padding:16px 0}
+</style></head><body><div class="wrap">
+
+<div style="background:#fff3e0;border:2px solid #ff9800;border-radius:10px;padding:12px 16px;margin:0 0 18px 0;line-height:1.7">
+<div style="font-weight:700;color:#e65100;font-size:15px;margin-bottom:6px">⚠️ 归档产物 · 口径已过时（阅读前必看）</div>
+<div style="font-size:13px;color:#5d4037">
+本页生成于 <b>2026-09-02</b>，是 <code>daily_advisor.py</code> 的产物快照。<br>
+页面正文中引用的回测数字 <b>年化 11.37% / 夏普 1.171 / 亏损概率 1.4%</b> 属于<b style="color:#c62828">旧口径</b>。<br><br>
+该口径含一个已修 bug：2024-04-01 中际旭创同时进入防御仓 top4 与热点仓 top1，
+旧代码两仓各买一遍 → 单只个股押到 10.5%。<code>exec_engine.joint_multi</code> 现已默认 <code>dedup=True</code>。<br><br>
+<b style="color:#2e7d32">修正后的基准：年化 10.94% / 波动 9.67% / 夏普 1.132 / 回撤 −8.23% / 亏损概率 1.3%</b><br>
+连带影响：B 方案 vs A 方案（纯防御）的 P(更优) 由 93.7% 降至 <b>86.9%</b>，更达不到 95% 显著，不得表述为「显著提升」。<br><br>
+<span style="color:#8d6e63">本页仅作历史归档，<b>不要引用其中的回测数字做决策</b>。
+需要新口径面板请重跑 <code>python3 src/daily_advisor.py</code>。</span>
+</div></div>
+<h1>每日盯盘指令 · 2026-09-02</h1>
+<div class="sub">行情状态 <b style="color:#ffb74d">🟡 盘前(昨收) @ 15:36:00</b>
+ · 因子基于 2026-08-31 收盘 · 本金 200,000 元 ·
+ <span style="color:#ef5350">已剔除科创板/北交所/ST</span></div>
+<div class="sub" style="margin-top:-10px">
+下列<b>现价/买入区间/止损/止盈</b>全部按<b>最新一笔成交价</b>计算, 不是昨天的收盘价。
+盘前运行时现价=昨收, 属正常; 9:30 后重跑即为盘中实时。</div>
+
+<div class="panel">
+  <h2>资金与仓位</h2>
+  <div class="bar">
+    <div class="kpi"><label>建议投入</label><b class="b">175,062 元</b></div>
+    <div class="kpi"><label>占用仓位</label><b class="b">88%</b></div>
+    <div class="kpi"><label>保留现金</label><b class="g">24,938 元 (12%)</b></div>
+    <div class="kpi"><label>组合结构</label><b>8 防御 + 2 黄金 + 2 国债</b></div>
+  </div>
+  <div class="gauge"><i class="used" style="width:87.53115%"></i><i class="free" style="width:12.468850000000003%"></i></div>
+  <div class="legend">■ 已投入 88%　■ 现金 12%　
+  —— <b>刻意不满仓</b>: 保留现金用于下跌补仓与突发机会</div>
+  <div class="legend" style="margin-top:8px">
+  🛡 <b>防御腿 69,947 元（35.0%）</b>8 只
+  红利/低波/价值 ETF <b>等权全买、不筛选</b>，天然分散、不需要行业约束　
+  🥇 <b>黄金腿 21,417 元（10.7%）</b>2 只黄金 ETF，
+  与 A 股相关性仅 <b>0.13</b>，是组合里唯一真正的分散化来源　
+  🏦 <b>现金腿 25,394 元（12.7%）</b>2 只国债 ETF，
+  年化 3.62%/回撤 −4.6%，<b>是会生息的现金</b>，T+0 随时可变现　
+  💵 <b>现金 24,938 元</b>（机动补仓）</div>
+  <div class="legend" style="margin-top:6px;font-size:12px">
+  目标权重 <b>26 / 4 / 35 / 10.5 / 17.5 / 7</b>
+  （<b>防御仓</b>4只 / <b>热点仓</b>1只 / 防御ETF / 黄金ETF / 国债ETF / 现金）。
+  回测（2020-2026，<b>可执行口径联合回测</b>：剔除科创板·北交所、个股股价≤120元、
+  同一现金池 + 真实整手约束 + 手续费与印花税，个股季频 + ETF 月频）：
+  年化 <b>11.37%</b>、波动 9.71%、夏普 <b>1.171</b>、最大回撤 <b>−8.23%</b>、
+  持有满 1 年亏损概率 <b>1.4%</b>。<br>
+  对照纯 ETF（个股 0%）：年化 6.95%、夏普 0.822、回撤 −8.96%、亏损概率 7.8% ——
+  加 30% 个股后<b>年化 +4.4pp、回撤反而收窄 0.7pp、亏损概率从 7.8% 降到 1.4%</b>，
+  因为两条腿日收益相关性只有 <b>0.110</b>。
+  详见 <code>配置决策终版报告.md</code>。</div>
+</div>
+
+
+<div class="panel">
+  <h2>跨仓月度再平衡</h2>
+  <div class="empty">尚无持仓账本。按今日建议建仓后运行 <code>--commit</code> 写入账本，
+  本面板即从下月起显示各仓权重偏离与调仓金额。</div>
+</div>
+
+
+
+<div class="panel">
+  <h2>今日操作 · 持仓与卖出</h2>
+  <div class="empty">当前<b>没有持仓记录</b>。下方为<b>建仓指令</b>,
+按建议成交后执行 <code style="color:#ffb74d">python3.11 src/daily_advisor.py --commit</code>
+写入持仓账本, 之后每天自动盯盘并提示卖出/加仓。</div>
+</div>
+
+<div class="panel">
+  <h2>买入清单（建仓）</h2>
+  <div class="cards">
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">1</span>
+    <b>工商银行</b> <span class="code">601398</span> <span class="drv dv">🛡 修正六因子</span></div>
+    <div class="ind">商业银行</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>8.15</b><small class="qt">今日 <b style='color:#e53935'>+0.99%</b> · 15:34:59</small></div>
+    <div><label>买入区间</label><b class="buy">8.11 ~ 8.23</b><small>卖一 8.16</small></div>
+    <div><label>止损价</label><b class='sl'>6.11 <small>(-8%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">9.37 / 10.19 <small>(+15%/+25%)</small></b></div>
+    <div><label>建议买入</label><b>15 手</b></div>
+    <div><label>投入金额</label><b>12,225 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div><b>修正六因子</b> 综合评分 z=<b>1.12</b> = 价值(+1.20) + 大市值(+3.39) + 动量(-0.14) + 反转(+0.55) + 低波动(+0.95) + 高流动性(+0.75)。六个子因子 IC 检验全部 t>2 显著；【为什么偏大市值而不是小市值】IC 检验显示沪深300 池内小市值是<b>负 alpha</b>(IC −0.028~−0.051, t=−3.2~−6.9)。原六因子合成写的是−z_size, 等于常年倒着下注; 修正符号后年化 3%→19%(纯个股腿口径)；【不设 −8% 止损】实测固定百分比止损对个股是<b>负贡献</b>: −8%/−12%/−20% 三档分别是 −5.99%/−0.20%/−4.46% 年化, 全部低于不止损。个股年化波动 40%+, 紧止损只会被正常波动扫出。本腿靠<b>季频调仓</b>换掉走坏的标的, 止损放宽到 −25% 只防黑天鹅；调仓频率 <b>Q</b>(1/4/7/10 月首个交易日); 回测季度调仓夏普 1.075 优于月度的 1.004；今日 +1.0%, 价格平稳</div></div>
+  <div class="tags"><span class="tag t-value">🎯 修正六因子</span></div>
+  <div class='ff'>20日资金流 CMF: <b style='color:#e53935'>+0.20</b> · 20日涨幅 <b>+1.4%</b> · 成交额放大 <b>0.77×</b></div>
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">2</span>
+    <b>农业银行</b> <span class="code">601288</span> <span class="drv dv">🛡 修正六因子</span></div>
+    <div class="ind">商业银行</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>7.05</b><small class="qt">今日 <b style='color:#e53935'>+1.88%</b> · 15:34:59</small></div>
+    <div><label>买入区间</label><b class="buy">7.01 ~ 7.12</b><small>卖一 7.05</small></div>
+    <div><label>止损价</label><b class='sl'>5.29 <small>(-8%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">8.11 / 8.81 <small>(+15%/+25%)</small></b></div>
+    <div><label>建议买入</label><b>18 手</b></div>
+    <div><label>投入金额</label><b>12,690 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div><b>修正六因子</b> 综合评分 z=<b>1.03</b> = 价值(+0.87) + 大市值(+3.42) + 动量(-0.21) + 反转(+0.63) + 低波动(+0.81) + 高流动性(+0.64)。六个子因子 IC 检验全部 t>2 显著；【为什么偏大市值而不是小市值】IC 检验显示沪深300 池内小市值是<b>负 alpha</b>(IC −0.028~−0.051, t=−3.2~−6.9)。原六因子合成写的是−z_size, 等于常年倒着下注; 修正符号后年化 3%→19%(纯个股腿口径)；【不设 −8% 止损】实测固定百分比止损对个股是<b>负贡献</b>: −8%/−12%/−20% 三档分别是 −5.99%/−0.20%/−4.46% 年化, 全部低于不止损。个股年化波动 40%+, 紧止损只会被正常波动扫出。本腿靠<b>季频调仓</b>换掉走坏的标的, 止损放宽到 −25% 只防黑天鹅；调仓频率 <b>Q</b>(1/4/7/10 月首个交易日); 回测季度调仓夏普 1.075 优于月度的 1.004；今日小幅走强 +1.9%, 等回落再买</div></div>
+  <div class="tags"><span class="tag t-value">🎯 修正六因子</span></div>
+  <div class='ff'>20日资金流 CMF: <b style='color:#e53935'>+0.21</b> · 20日涨幅 <b>+0.4%</b> · 成交额放大 <b>0.81×</b></div>
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">3</span>
+    <b>民生银行</b> <span class="code">600016</span> <span class="drv dv">🛡 修正六因子</span></div>
+    <div class="ind">商业银行</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>3.64</b><small class="qt">今日 <b style='color:#e53935'>+3.12%</b> · 15:34:59</small></div>
+    <div><label>买入区间</label><b class="buy">3.62 ~ 3.68</b><small>卖一 3.64</small></div>
+    <div><label>止损价</label><b class='sl'>2.73 <small>(-8%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">4.19 / 4.55 <small>(+15%/+25%)</small></b></div>
+    <div><label>建议买入</label><b>37 手</b></div>
+    <div><label>投入金额</label><b>13,468 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div><b>修正六因子</b> 综合评分 z=<b>1.01</b> = 价值(+4.99) + 大市值(+0.15) + 动量(-0.65) + 反转(+0.75) + 低波动(+1.18) + 高流动性(-0.35)。六个子因子 IC 检验全部 t>2 显著；【为什么偏大市值而不是小市值】IC 检验显示沪深300 池内小市值是<b>负 alpha</b>(IC −0.028~−0.051, t=−3.2~−6.9)。原六因子合成写的是−z_size, 等于常年倒着下注; 修正符号后年化 3%→19%(纯个股腿口径)；【不设 −8% 止损】实测固定百分比止损对个股是<b>负贡献</b>: −8%/−12%/−20% 三档分别是 −5.99%/−0.20%/−4.46% 年化, 全部低于不止损。个股年化波动 40%+, 紧止损只会被正常波动扫出。本腿靠<b>季频调仓</b>换掉走坏的标的, 止损放宽到 −25% 只防黑天鹅；调仓频率 <b>Q</b>(1/4/7/10 月首个交易日); 回测季度调仓夏普 1.075 优于月度的 1.004；20日资金流 CMF=<b>-0.02</b>, 主动卖盘占优, 需警惕；今日已冲高 <b>+3.1%</b>, 别追 —— 等回落到 <b>3.62</b> 以下再买</div></div>
+  <div class="tags"><span class="tag t-value">🎯 修正六因子</span><span class="tag t-risk">⚠ 资金流出</span><span class="tag t-risk">今日 +3.1% 冲高</span></div>
+  <div class='ff'>20日资金流 CMF: <b style='color:#43a047'>-0.02</b> · 20日涨幅 <b>-3.3%</b> · 成交额放大 <b>0.92×</b></div>
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">4</span>
+    <b>兴业银行</b> <span class="code">601166</span> <span class="drv dv">🛡 修正六因子</span></div>
+    <div class="ind">商业银行</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>17.95</b><small class="qt">今日 <b style='color:#e53935'>+2.34%</b> · 15:34:59</small></div>
+    <div><label>买入区间</label><b class="buy">17.86 ~ 18.13</b><small>卖一 17.95</small></div>
+    <div><label>止损价</label><b class='sl'>13.46 <small>(-8%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">20.64 / 22.44 <small>(+15%/+25%)</small></b></div>
+    <div><label>建议买入</label><b>7 手</b></div>
+    <div><label>投入金额</label><b>12,565 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div><b>修正六因子</b> 综合评分 z=<b>0.96</b> = 价值(+2.51) + 大市值(+1.41) + 动量(-0.49) + 反转(+1.03) + 低波动(+1.00) + 高流动性(+0.31)。六个子因子 IC 检验全部 t>2 显著；【为什么偏大市值而不是小市值】IC 检验显示沪深300 池内小市值是<b>负 alpha</b>(IC −0.028~−0.051, t=−3.2~−6.9)。原六因子合成写的是−z_size, 等于常年倒着下注; 修正符号后年化 3%→19%(纯个股腿口径)；【不设 −8% 止损】实测固定百分比止损对个股是<b>负贡献</b>: −8%/−12%/−20% 三档分别是 −5.99%/−0.20%/−4.46% 年化, 全部低于不止损。个股年化波动 40%+, 紧止损只会被正常波动扫出。本腿靠<b>季频调仓</b>换掉走坏的标的, 止损放宽到 −25% 只防黑天鹅；调仓频率 <b>Q</b>(1/4/7/10 月首个交易日); 回测季度调仓夏普 1.075 优于月度的 1.004；20日资金流 CMF=<b>-0.12</b>, 主动卖盘占优, 需警惕；今日小幅走强 +2.3%, 等回落再买</div></div>
+  <div class="tags"><span class="tag t-value">🎯 修正六因子</span><span class="tag t-risk">⚠ 资金流出</span></div>
+  <div class='ff'>20日资金流 CMF: <b style='color:#43a047'>-0.12</b> · 20日涨幅 <b>-8.2%</b> · 成交额放大 <b>1.33×</b></div>
+</div>
+<div class="card hot">
+  <div class="card-hd"><div><span class="rank">5</span>
+    <b>招商轮船</b> <span class="code">601872</span> <span class="drv dh">🔥 热点驱动</span></div>
+    <div class="ind">运输业</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>18.39</b><small class="qt">今日 <b style='color:#43a047'>-1.92%</b> · 15:34:59</small></div>
+    <div><label>买入区间</label><b class="buy">18.30 ~ 18.57</b><small>卖一 18.39</small></div>
+    <div><label>止损价</label><b class='sl'>16.92 <small>(-8%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">21.15 / 22.99 <small>(+15%/+25%)</small></b></div>
+    <div><label>建议买入</label><b>4 手</b></div>
+    <div><label>投入金额</label><b>7,356 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div><b>12-1动量 +201.6%</b>(近12个月收益 − 最近1个月收益), 横截面 z=<b>3.13</b> —— 中期趋势向上, 且已剔除近1个月涨幅, 避开A股短期反转陷阱；<b>不追高验证</b>: 近20日 <b>+10.1%</b>(上限 +15%)、现价为52周高点的 <b>88%</b>(上限 95%, 即不买创新高的)、资金流 CMF=<b>-0.00</b>(下限 -0.15, 不接资金出逃的票)。<b>三条全过才买入</b>；【为什么必须不追高】可执行口径(剔除科创板/北交所、股价≤120元、真实整手与税费)下, 同样 4 防 26% + 1 热 4% 的仓位: 裸动量(追高)年化 <b>10.29%</b>、夏普 <b>1.055</b>、回撤 −8.45%、<b>持1年亏损概率 3.7%</b>; 加上这三条约束后 年化 <b>11.37%</b>、夏普 <b>1.171</b>、回撤 −8.23%、<b>亏损概率 1.4%</b>。<b>收益更高、风险更低</b> —— 追高不是换来收益, 是纯粹白付风险；【为什么只买 1 只】热点只数敏感性(个股总仓恒为 30%): 1只×4% 夏普 <b>1.171</b> → 2只×5% <b>1.013</b> → 全仓5只热点 更低。热点只数越多, 越接近'追涨组合', 夏普单调下降。它是调味品不是主菜, 严格限定 4%；【为什么恰好 4%】热点权重跨 8 个起始点检验: 4% 的夏普均值 <b>1.281</b>、最差 <b>1.171</b> 都是最高(5% 为 1.256/1.127, 6% 为 1.246/1.113, 3% 为 1.189/1.055)。4% 是稳健的甜点；20日资金流 CMF=<b>-0.00</b>(主动卖盘占优)；近5日成交额为60日均量的 <b>0.81倍</b>；今日小幅回落 1.9%, 可在区间下沿挂单</div></div>
+  <div class="tags"><span class="tag t-hot">🔥 热点驱动</span><span class="tag t-def">✅ 不追高</span><span class="tag t-risk">⚠ 资金流出</span></div>
+  <div class='ff'>20日资金流 CMF: <b style='color:#43a047'>-0.00</b> · 20日涨幅 <b>+10.1%</b> · 成交额放大 <b>0.81×</b></div>
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">6</span>
+    <b>价值ETF富国</b> <span class="code">512040</span> <span class="drv dv">🛡 防御ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>1.23</b><small class="qt">今日 <b style='color:#e53935'>+0.41%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">1.23 ~ 1.24</b><small>卖一 398100.00</small></div>
+    <div><label>止损价</label><b class='sl'>1.04 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">1.60 / 1.84 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>71 手</b></div>
+    <div><label>投入金额</label><b>8,726 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🛡 防御ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">7</span>
+    <b>红利低波ETF华泰柏瑞</b> <span class="code">512890</span> <span class="drv dv">🛡 防御ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>1.21</b><small class="qt">今日 <b style='color:#e53935'>+1.34%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">1.21 ~ 1.22</b><small>卖一 2469300.00</small></div>
+    <div><label>止损价</label><b class='sl'>1.03 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">1.57 / 1.81 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>72 手</b></div>
+    <div><label>投入金额</label><b>8,698 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🛡 防御ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">8</span>
+    <b>红利ETF华泰柏瑞</b> <span class="code">510880</span> <span class="drv dv">🛡 防御ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>3.48</b><small class="qt">今日 <b style='color:#43a047'>-0.20%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">3.48 ~ 3.51</b><small>卖一 165600.00</small></div>
+    <div><label>止损价</label><b class='sl'>2.96 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">4.53 / 5.22 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>25 手</b></div>
+    <div><label>投入金额</label><b>8,705 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🛡 防御ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">9</span>
+    <b>沪深300红利ETF建信</b> <span class="code">512530</span> <span class="drv dv">🛡 防御ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>1.68</b><small class="qt">今日 <b style='color:#e53935'>+1.02%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">1.67 ~ 1.69</b><small>卖一 120500.00</small></div>
+    <div><label>止损价</label><b class='sl'>1.43 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">2.18 / 2.52 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>52 手</b></div>
+    <div><label>投入金额</label><b>8,726 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🛡 防御ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">10</span>
+    <b>价值ETF华宝</b> <span class="code">510030</span> <span class="drv dv">🛡 防御ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>1.09</b><small class="qt">今日 <b style='color:#e53935'>+1.77%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">1.09 ~ 1.10</b><small>卖一 193100.00</small></div>
+    <div><label>止损价</label><b class='sl'>0.93 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">1.42 / 1.64 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>80 手</b></div>
+    <div><label>投入金额</label><b>8,744 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🛡 防御ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">11</span>
+    <b>中国低波ETF平安</b> <span class="code">512390</span> <span class="drv dv">🛡 防御ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>1.24</b><small class="qt">今日 <b style='color:#e53935'>+0.16%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">1.24 ~ 1.25</b><small>卖一 177800.00</small></div>
+    <div><label>止损价</label><b class='sl'>1.05 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">1.61 / 1.86 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>71 手</b></div>
+    <div><label>投入金额</label><b>8,797 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🛡 防御ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">12</span>
+    <b>基本面50ETF嘉实</b> <span class="code">512750</span> <span class="drv dv">🛡 防御ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>1.47</b><small class="qt">今日 <b style='color:#e53935'>+1.10%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">1.46 ~ 1.48</b><small>卖一 143600.00</small></div>
+    <div><label>止损价</label><b class='sl'>1.25 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">1.91 / 2.20 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>60 手</b></div>
+    <div><label>投入金额</label><b>8,796 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🛡 防御ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">13</span>
+    <b>180治理ETF交银</b> <span class="code">510010</span> <span class="drv dv">🛡 防御ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>1.79</b><small class="qt">今日 <b style='color:#e53935'>+1.02%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">1.78 ~ 1.80</b><small>卖一 100.00</small></div>
+    <div><label>止损价</label><b class='sl'>1.52 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">2.32 / 2.68 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>49 手</b></div>
+    <div><label>投入金额</label><b>8,756 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🛡 防御ETF</span></div>
+  
+</div>
+<div class="card gold">
+  <div class="card-hd"><div><span class="rank">14</span>
+    <b>黄金ETF易方达</b> <span class="code">159934</span> <span class="drv dg">🥇 黄金ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>9.52</b><small class="qt">今日 <b style='color:#43a047'>-0.19%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">9.50 ~ 9.60</b><small>卖一 188900.00</small></div>
+    <div><label>止损价</label><b class='sl'>8.09 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">12.38 / 14.28 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>11 手</b></div>
+    <div><label>投入金额</label><b>10,475 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>与 A股防御 ETF 相关性仅 <b>0.13</b>、与国债 <b>0.07</b>, 是本组合里唯一真正的分散化来源。2020-2026 年化 <b>15.83%</b>、夏普 <b>0.909</b>。【为什么要压到 15% 而不是最优解想要 30-40%】: 黄金这段收益高度依赖2024(+27.5%)和 2025(<b>+61.0%</b>)两年。把权重建在这种一次性行情上是过拟合。15% 是<b>先验锚定</b>的保险仓位 —— 它在 2022 年 A股下跌时贡献 +9.3%, 起的是对冲作用, 不是收益主力。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-gold">🥇 黄金ETF</span></div>
+  
+</div>
+<div class="card gold">
+  <div class="card-hd"><div><span class="rank">15</span>
+    <b>黄金ETF华安</b> <span class="code">518880</span> <span class="drv dg">🥇 黄金ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>9.12</b><small class="qt">今日 <b style='color:#43a047'>-0.19%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">9.10 ~ 9.19</b><small>卖一 194000.00</small></div>
+    <div><label>止损价</label><b class='sl'>7.75 <small>(-15%)</small></b></div>
+    <div><label>止盈价</label><b class="tp">11.85 / 13.68 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>12 手</b></div>
+    <div><label>投入金额</label><b>10,942 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>与 A股防御 ETF 相关性仅 <b>0.13</b>、与国债 <b>0.07</b>, 是本组合里唯一真正的分散化来源。2020-2026 年化 <b>15.83%</b>、夏普 <b>0.909</b>。【为什么要压到 15% 而不是最优解想要 30-40%】: 黄金这段收益高度依赖2024(+27.5%)和 2025(<b>+61.0%</b>)两年。把权重建在这种一次性行情上是过拟合。15% 是<b>先验锚定</b>的保险仓位 —— 它在 2022 年 A股下跌时贡献 +9.3%, 起的是对冲作用, 不是收益主力。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-gold">🥇 黄金ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">16</span>
+    <b>十年国债ETF国泰</b> <span class="code">511260</span> <span class="drv dv">🏦 国债ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>135.78</b><small class="qt">今日 <b style='color:#e53935'>+0.07%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">135.51 ~ 136.87</b><small>卖一 5300.00</small></div>
+    <div><label>止损价</label><b class='sl'>不设止损</b></div>
+    <div><label>止盈价</label><b class="tp">176.52 / 203.67 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>1 手</b></div>
+    <div><label>投入金额</label><b>13,578 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>替代现金: 十年国债ETF 2020-2026 年化 <b>3.62%</b>、夏普 <b>1.488</b>、最大回撤仅 <b>-4.6%</b>, 全面优于活期 1.8%。<b>T+0 交易</b>, 需要用钱随时可卖, 本质上是会生息的现金。【为什么用 2 只】: 单只 1 手要 1.3 万元, 25% 仓位只能买 3~4 手, 权重误差高达 6.8pp; 拆成 2 只后误差降到 0.4pp, 代价仅 0.10pp 年化。；不设止损: 国债 ETF 的回撤来源是利率波动, 不是信用违约, 跌了拿久期会补回来；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🏦 国债ETF</span></div>
+  
+</div>
+<div class="card val">
+  <div class="card-hd"><div><span class="rank">17</span>
+    <b>国债ETF平安</b> <span class="code">511020</span> <span class="drv dv">🏦 国债ETF</span></div>
+    <div class="ind">ETF</div></div>
+  <div class="grid">
+    <div><label>最新成交价</label><b>118.16</b><small class="qt">今日 <b style='color:#e53935'>+0.06%</b> · 00</small></div>
+    <div><label>买入区间</label><b class="buy">117.92 ~ 119.10</b><small>卖一 25200.00</small></div>
+    <div><label>止损价</label><b class='sl'>不设止损</b></div>
+    <div><label>止盈价</label><b class="tp">153.61 / 177.24 <small>(+30%/+50%)</small></b></div>
+    <div><label>建议买入</label><b>1 手</b></div>
+    <div><label>投入金额</label><b>11,816 元</b></div>
+  </div>
+  <div class="logic"><label>买入逻辑</label><div>替代现金: 十年国债ETF 2020-2026 年化 <b>3.62%</b>、夏普 <b>1.488</b>、最大回撤仅 <b>-4.6%</b>, 全面优于活期 1.8%。<b>T+0 交易</b>, 需要用钱随时可卖, 本质上是会生息的现金。【为什么用 2 只】: 单只 1 手要 1.3 万元, 25% 仓位只能买 3~4 手, 权重误差高达 6.8pp; 拆成 2 只后误差降到 0.4pp, 代价仅 0.10pp 年化。；不设止损: 国债 ETF 的回撤来源是利率波动, 不是信用违约, 跌了拿久期会补回来；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>
+  <div class="tags"><span class="tag t-value">🏦 国债ETF</span></div>
+  
+</div></div>
+  
+  <div class="warn">⚠️ <b>执行纪律</b>: 买入价尽量落在区间内; 盘中<b>挂限价单</b>而不是市价追;
+  触发止损无条件卖出, 不与股票谈感情。热点仓为<b>右侧追涨</b>, 涨多后回撤风险显著高于价值仓。
+  以上为量化信号, <b>非投资建议</b>, 历史回测不代表未来。</div>
+</div>
+
+<div class="panel">
+  <h2>行业分布 · 检查有没有把鸡蛋放一个篮子</h2>
+  <table class="tbl"><thead><tr><th>中证行业大类</th>
+  <th>门类</th><th>只数</th>
+  <th>金额</th><th>占总本金</th></tr></thead><tbody><tr><td>🛡 <b>ETF</b></td><td style='color:#9aa0a6'></td><td>12</td><td>116,758</td><td>58.4%</td></tr><tr><td>🛡 <b>商业银行</b></td><td style='color:#9aa0a6'>金融</td><td>4</td><td>50,948</td><td>25.5%</td></tr><tr><td>🔥 <b>运输业</b></td><td style='color:#9aa0a6'>工业</td><td>1</td><td>7,356</td><td>3.7%</td></tr></tbody></table>
+  <div class="legend" style="margin-top:8px">分散在
+  <b>3</b> 个行业, 个股腿<b>不设行业上限</b>(实测强制分散有害, 详见下方说明)。</div>
+  <div class="warn"><b>个股腿为什么不设行业上限</b>: 可执行口径实测强制分散是<b>全面有害</b>的 —— 无约束 夏普 <b>1.171</b> / 回撤 −8.23% / 亏损概率 1.4%; 2只/行业 0.953 / −10.25% / 3.0%; 1只/行业 0.813 / −11.43% / <b>6.7%</b>。强制分散不只是降收益, 它同时<b>抬高波动、加深回撤、把亏损概率翻 5 倍</b> —— 因为逼你放弃最优标的去买次优的。风险控制靠<b>仓位 30%</b> 而不是选股约束。<br><b>但要清醒</b>: 当前防御仓 4 只全是银行, 相关性 0.8+, 本质是<b>同一个宏观赌注</b>(利率 + 信用), 分散度低于表面。这不是 bug, 是因子在当前市场的自然结果 —— 价值+大市值+低波动+高流动性 的极值就是银行股。<b>必须承认的风险</b>: 回测区间 2020-2026 恰好覆盖银行估值修复这一段, 该信号可能是<b>阶段性而非永久</b>的。若你无法接受这种集中, 把文件顶部 <code>W_DEF_EACH</code> 调低即可, 代价是收益下移。</div>
+</div>
+
+<div class="panel">
+  <h2>近期资金在炒什么（沪深300 内动量/活跃度榜）</h2>
+  <div class="legend" style="margin-bottom:8px">ℹ️ <b>仅供参考，本表的动量榜不产生交易信号。</b>
+  <b>v5 起这张榜开始产生真实交易信号</b> —— 热点仓的<b>种子池</b>就是 12-1 动量，
+  但必须闯过<b>三道不追高闸门</b>才买：近20日涨幅 ≤ +15%、现价 ≤ 52周高点的 95%、
+  资金流 CMF ≥ −0.15。三条全过才进池，再取动量最高的一只。<br>
+  <b>为什么必须加闸门</b>：同样 4 防 26% + 1 热 4% 的仓位，裸动量（追高）年化 10.29%、
+  夏普 1.055、<b>亏损概率 3.7%</b>；加闸门后年化 11.37%、夏普 1.171、<b>亏损概率 1.4%</b>。
+  追高不是换来收益，是<b>纯白付风险</b>。<br>
+  <b>为什么热点仓只买 1 只、只给 4%</b>：只数敏感性 1只×4% 夏普 1.171 → 2只×5% 1.013 →
+  全仓热点 更低；权重跨 8 个起始点检验，4% 的夏普均值 1.281、最差 1.171 都是最高。
+  它是<b>调味品不是主菜</b>。</div>
+  <table class="tbl"><thead><tr><th>#</th><th>名称</th><th>代码</th><th>行业</th>
+  <th>20日涨幅</th><th>成交额放大</th></tr></thead><tbody><tr><td>1</td><td><b>山东黄金</b></td><td class='code'>600547</td><td>贵金属</td><td style='color:#e53935'>+37.2%</td><td>1.77×</td></tr><tr><td>2</td><td><b>英维克</b></td><td class='code'>002837</td><td>专用机械</td><td style='color:#e53935'>+46.8%</td><td>1.61×</td></tr><tr><td>3</td><td><b>生益科技</b></td><td class='code'>600183</td><td>电子元件</td><td style='color:#e53935'>+50.3%</td><td>1.10×</td></tr><tr><td>4</td><td><b>东方盛虹</b></td><td class='code'>000301</td><td>化学原料</td><td style='color:#e53935'>+20.3%</td><td>1.26×</td></tr><tr><td>5</td><td><b>中金黄金</b></td><td class='code'>600489</td><td>贵金属</td><td style='color:#e53935'>+15.7%</td><td>1.25×</td></tr><tr><td>6</td><td><b>中煤能源</b></td><td class='code'>601898</td><td>煤炭</td><td style='color:#e53935'>+21.7%</td><td>1.07×</td></tr><tr><td>7</td><td><b>江西铜业</b></td><td class='code'>600362</td><td>工业金属</td><td style='color:#e53935'>+12.6%</td><td>1.27×</td></tr><tr><td>8</td><td><b>荣盛石化</b></td><td class='code'>002493</td><td>化学原料</td><td style='color:#e53935'>+21.0%</td><td>1.04×</td></tr></tbody></table>
+  <div class="warn">这张榜是<b>当前市场热点方向</b>。若你的持仓方向与它背离,
+  说明你在"左侧埋伏"(可能长期不涨); 若一致则在"右侧跟随"(需防高位回撤)。</div>
+</div>
+
+<div class="foot">生成时间 2026-09-02 00:58 · 实时行情 新浪财经 / 因子数据 AkShare ·
+仅供研究, 不构成投资建议</div>
+</div></body></html>

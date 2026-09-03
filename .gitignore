@@ -1,0 +1,22 @@
+# K 线缓存（641 个 CSV，每天重拉）
+data/kline_cache/
+data/raw/
+
+# 日志与临时文件
+logs/
+*.tmp
+*.log
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# 编辑器 / 系统
+.DS_Store
+.idea/
+.vscode/
+
+# 页面产物（由 build_static.py 从 index_src.html 生成，不入库）
+web/index.html
+web/index_static.html
