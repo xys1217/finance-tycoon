@@ -371,7 +371,23 @@ document.querySelectorAll(".tab").forEach(t=>{
     if(el) el.click();
   }
 })();
-const J = async u => (await fetch(u)).json();
+// 注意：这里必须把第二个参数 opt 透传给 fetch。
+// 原写法 `async u => (await fetch(u)).json()` 只有一个形参，于是
+// J("/api/paper/order", {method:"POST", body:...}) 的第二个实参被静默丢弃，
+// 实际发出的是 GET —— 而 /api/paper/order|plan|reset 只接受 POST，
+// 一律回 404。后果：模拟盘的买入 / 卖出 / 一键跟单 / 重置四个按钮
+// 全都点了没反应（catch 到异常但不说人话）。2026-09-03 前端交互测试才发现。
+const J = async (u, opt) => {
+  const r = await fetch(u, opt);
+  const t = await r.text();
+  try {
+    return JSON.parse(t);
+  } catch {
+    // 服务端返回非 JSON（404 的 HTML 错误页、500 等）时，
+    // 把状态码和正文片段抛出来，别只抛一句 "Unexpected token <"
+    throw new Error(`HTTP ${r.status} ${r.statusText} — ${t.slice(0, 120)}`);
+  }
+};
 const pct = v => v==null ? "—" : (v>0?`<span class="up">+${v}%</span>`
                 :(v<0?`<span class="down">${v}%</span>`:`${v}%`));
 
@@ -1052,7 +1068,13 @@ document.getElementById("pPlan").addEventListener("click",async()=>{
   };
   const s0=window.__PAPER__||window.__PAPER_SNAP__;
   if(s0&&s0.plan_source){ set(window.__SIGNAL__, s0.plan_source); }
-  fetch("/api/daily_signal").then(r=>r.json()).then(set).catch(()=>set(window.__SIGNAL__));
+  // 离线版（file:// 双击打开）不要再 fetch 绝对路径 —— 浏览器直接报
+  // `URL scheme "file" is not supported`，控制台一片红，而内嵌数据本来就够用。
+  if(location.protocol !== "file:"){
+    fetch("/api/daily_signal").then(r=>r.json()).then(set).catch(()=>set(window.__SIGNAL__));
+  }else{
+    set(window.__SIGNAL__);
+  }
 })();
 document.getElementById("pReset").addEventListener("click",async()=>{
   if(!confirm("清空账户，恢复 200,000 元现金？所有持仓与流水将被删除，不可恢复。")) return;

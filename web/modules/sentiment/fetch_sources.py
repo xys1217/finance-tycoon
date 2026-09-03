@@ -177,8 +177,11 @@ _NAME2CODE: Dict[str, str] = {}
 
 def _load_name_index() -> Dict[str, str]:
     """全市场「公司简称 → 代码」映射。
-    新闻里写的是「九州一轨」而不是「688485」，只匹配 6 位代码会永远零覆盖。"""
-    global _NAME2CODE
+    新闻里写的是「九州一轨」而不是「688485」，只匹配 6 位代码会永远零覆盖。
+
+    这里只需读全局字典（setdefault 是调用方法、不是重新绑定变量），
+    所以不需要 `global` 声明 —— 加了反而被 pyflakes 判为冗余。
+    """
     if _NAME2CODE or ak is None:
         return _NAME2CODE
     try:

@@ -56,13 +56,19 @@ window.__PAPER_SNAP__ = {json.dumps(paper, ensure_ascii=False)};
 /* 离线兜底：把 /api/* 请求接到内嵌数据上 */
 const _origFetch = window.fetch;
 window.fetch = async (url, opt) => {{
-  try {{
-    const r = await _origFetch(url, opt);
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    return r;
-  }} catch (e) {{
+  const u = String(url);
+  // file:// 下不发起真请求：浏览器会直接抛
+  // "URL scheme 'file' is not supported" 并往控制台刷一片红，
+  // 虽然 catch 后用内嵌数据兜住了，但看着就像页面坏了。离线直接用快照。
+  const offline = (location.protocol === "file:");
+  if (!offline) {{
+    try {{
+      const r = await _origFetch(url, opt);
+      if (r.ok) return r;
+    }} catch (e) {{ /* 落到底下的内嵌数据兜底 */ }}
+  }}
+  {{
     let data;
-    const u = String(url);
     if (u.includes("/api/daily_signal")) data = window.__SIGNAL__;
     else if (u.includes("/api/positions")) data = (window.__SIGNAL__ && window.__SIGNAL__.positions) || {{}};
     else if (u.includes("/api/quant"))   data = window.__QUANT__;
@@ -123,7 +129,12 @@ _sd = signal.get("sig_date","—"); _bd = signal.get("bar_date","—")
 print(f"  signal    : {_sd}（bar {_bd}）个股 {len(signal.get('picks',[]))} 只 / ETF {len(signal.get('etfs',[]))} 只")
 _np = len(paper.get("positions", {})); _nt = len(paper.get("trades", []))
 print(f"  paper     : 持仓 {_np} 只 / 流水 {_nt} 笔")
-# 顺序自检：数据脚本必须在主脚本之前
+# 顺序自检：数据脚本必须在主脚本之前。
+# 锚点别写死整行——曾经写死 "const J = async u =>"，后来给 J 加了 opt 参数，
+# 字符串对不上 → 自检恒 FAIL，等于这个检查自己失效了。用稳定前缀即可。
 i_data = out.find("window.__SENTIMENT__")
-i_main = out.find("const J = async u =>")
-print(f"  顺序自检：数据 @{i_data} < 主脚本 @{i_main} → {'OK' if 0 < i_data < i_main else 'FAIL'}")
+i_main = out.find("const J = async")
+if i_main < 0:
+    i_main = out.find("async function pLoad")   # 退路：主逻辑里的取数函数
+print(f"  顺序自检：数据 @{i_data} < 主脚本 @{i_main} → "
+      f"{'OK' if 0 < i_data < i_main else 'FAIL'}")

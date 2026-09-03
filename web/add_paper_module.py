@@ -8,7 +8,6 @@
 # 注意：本脚本是一次性注入器，其内容已固化进 index_src.html。
 # 后续修复直接改 index_src.html（唯一改动入口），不要重跑本脚本，
 # 否则会把「跟单说明动态回填」等后来的修复覆盖回硬编码文案。
-import re
 
 SRC = "/workspace/web/index_src.html"
 s = open(SRC, encoding="utf-8").read()

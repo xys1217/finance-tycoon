@@ -117,13 +117,21 @@ class _Lock:
 
 
 def atomic_write_json(path: str, data) -> None:
-    """先写临时文件再原子替换 —— 杜绝「读到写了一半的 JSON」。"""
+    """先写临时文件再原子替换 —— 杜绝「读到写了一半的 JSON」。
+
+    注意 tempfile.mkstemp 建出来的文件权限是 0600（只有属主可读写）。
+    原子替换后产物继承这个权限，于是 daily_signal.json 变成 -rw-------，
+    而同目录其它文件是 644。本沙箱里 server 与生成脚本同属 root 所以没事，
+    一旦换成别的用户 / 容器 / nginx 静态服务去读，就会「文件在但读不了」。
+    写完显式放宽到 0644（受 umask 影响，够用即可）。
+    """
     d = os.path.dirname(os.path.abspath(path)) or "."
     os.makedirs(d, exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=d, suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=1)
+        os.chmod(tmp, 0o644)
         os.replace(tmp, path)          # POSIX 原子操作
     except Exception:
         try:
@@ -468,7 +476,6 @@ def rebalance_info(sig_date: str, cal: list[str]) -> dict:
     而 v5 的回测收益正是按季频调仓验证的，日频换手是另一个没有回测支撑的策略。
     """
     sd = sig_date
-    fut = [d for d in cal if d >= sd]
     this_month_ftd = first_trade_day_of(int(sd[:4]), int(sd[5:7]), cal)
     is_etf_day = (this_month_ftd == sd)
     is_stock_day = is_etf_day and int(sd[5:7]) in REBALANCE_MONTHS

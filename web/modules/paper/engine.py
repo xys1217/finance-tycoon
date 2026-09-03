@@ -15,7 +15,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import time
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -351,7 +350,24 @@ def follow_plan(acc: dict) -> dict:
         if not ok:
             log.append({"code": code, "name": name, "leg": leg, "ok": False, "msg": why})
             continue
-        ok, msg, t = _buy_for_plan(acc, code, budget, tgt)
+
+        # 幂等跟单：只补到目标股数，已够就不再买。
+        #
+        # 之前不查已有持仓，点第二次「一键跟单」= 把 17 只全买第二遍：
+        #   现金 26,840（13.4%）→ 4,025（2.0%），仓位悄悄翻倍。
+        # 真实场景极易误触发（按钮点了没反应再点一下），而 v5 定案的
+        # 仓位纪律是按「每只 6.5%」算的，翻倍后纪律荡然无存。
+        have = int((acc["positions"].get(code) or {}).get("shares", 0))
+        if tgt and have >= tgt:
+            log.append({"code": code, "name": name, "leg": leg, "ok": True,
+                        "msg": f"已持有 {have} 份，达到目标 {tgt} 份，无需买入",
+                        "shares": 0, "amount": 0, "skipped": True})
+            continue
+        need = (tgt - have) if tgt else 0
+        # 补差额时预算按比例缩，避免用整只的预算去买 1/3 的量
+        budget = budget * need / tgt if (tgt and need > 0) else budget
+
+        ok, msg, t = _buy_for_plan(acc, code, budget, need or 0)
         rec = {"code": code, "name": name, "leg": leg, "ok": ok, "msg": msg,
                "shares": (t or {}).get("shares"), "amount": (t or {}).get("amount")}
         log.append(rec)

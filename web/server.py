@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import tempfile
 import threading
 
 from flask import Flask, jsonify, request, send_from_directory
@@ -100,18 +101,42 @@ def api_positions():
 @app.route("/api/positions", methods=["POST"])
 def api_positions_set():
     """补录成本价：{code:{cost:7.85, lots:15, name:'工商银行', leg:'防御仓'}}"""
-    d = request.get_json(silent=True) or {}
-    if not d:
-        return jsonify({"ok": False, "msg": "空请求"})
+    d = request.get_json(silent=True)          # 不用 `or {}`，否则分不清 null 和 {}
+    if d is None or d == {}:
+        return jsonify({"ok": False, "msg": "空请求"}), 400
+    # 必须是 {code: {...}} 字典。传数组时 d.items() 会抛 AttributeError
+    # → 整个接口 500 且 Flask 只回一个 HTML 错误页，前端完全看不出原因。
+    # 任何外部输入都要先校验类型再处理。
+    if not isinstance(d, dict):
+        return jsonify({
+            "ok": False,
+            "msg": f"格式不对：需要 {{\"601899\": {{\"cost\": 7.85, ...}}}} 这种字典，"
+                   f"收到的是 {type(d).__name__}"
+                   + ("（传了数组，请改成字典）" if isinstance(d, list) else "")
+        }), 400
+
     p = os.path.join(API, "positions.json")
     cur = _load("positions.json") or {}
+    updated, skipped = [], []
     for code, v in d.items():
         if not isinstance(v, dict):
+            skipped.append(str(code))          # 值不是字典，跳过后要如实报告
             continue
         cur.setdefault(code, {}).update(v)
         cur[code].pop("source", None)          # 人工补录后去掉 seed 提示
-    json.dump(cur, open(p, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    return jsonify({"ok": True, "msg": f"已更新 {len(d)} 只持仓", "positions": cur})
+        updated.append(str(code))
+    # 原子写：先落临时文件再 os.replace，避免写一半被别的进程读走。
+    # mkstemp 默认权限 0600，显式放宽到 0644 与其它 api/*.json 保持一致。
+    fd, tmp = tempfile.mkstemp(dir=API, suffix=".tmp")
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        json.dump(cur, f, ensure_ascii=False, indent=1)
+    os.chmod(tmp, 0o644)
+    os.replace(tmp, p)
+    msg = f"已更新 {len(updated)} 只持仓"
+    if skipped:
+        msg += f"；跳过 {len(skipped)} 项（值不是字典）"
+    return jsonify({"ok": True, "msg": msg, "updated": updated,
+                    "skipped": skipped, "positions": cur})
 
 
 @app.route("/api/sentiment")
