@@ -20,6 +20,35 @@ sys.path.insert(0, os.path.join(HERE, "modules", "analyze"))
 sys.path.insert(0, os.path.join(HERE, "modules", "paper"))
 
 
+def _banner():
+    """启动时打印代码版本。
+
+    踩过的坑：改完 engine.py / daily_signal.py 后没重启 server，
+    Flask 非 debug 模式不会热重载，线上跑的仍是旧代码 —— 于是出现
+    「直接调用函数是对的，走 API 却是错的」这种极难排查的现象
+    （例如 999999 被旧代码误报成 B 股）。打印 commit 让版本一眼可查。
+    """
+    import subprocess
+    from datetime import datetime
+    try:
+        rev = subprocess.check_output(
+            ["git", "-C", HERE, "rev-parse", "--short", "HEAD"],
+            stderr=subprocess.DEVNULL, timeout=5).decode().strip()
+    except Exception:
+        rev = "?"
+    try:
+        dirty = bool(subprocess.check_output(
+            ["git", "-C", HERE, "status", "--porcelain"],
+            stderr=subprocess.DEVNULL, timeout=5).decode().strip())
+    except Exception:
+        dirty = False
+    print(f"[server] 启动 {datetime.now():%Y-%m-%d %H:%M:%S} | "
+          f"代码 commit {rev}{' + 未提交改动' if dirty else ''}")
+    if dirty:
+        print("[server] ⚠ 工作区有未提交改动，当前进程加载的可能是旧代码；"
+              "改完 engine.py / daily_signal.py 必须重启本进程")
+
+
 def _load(name):
     p = os.path.join(API, name)
     if not os.path.exists(p):
@@ -118,9 +147,14 @@ def api_paper():
         st = PE.statement(acc)
         sig = PE.load_signal()
         if sig:
-            st["plan"] = PE.sig_plan(sig)
-            st["plan"] = [{"code": c, "name": n, "leg": leg, "weight": round(w * 100, 2)}
-                          for c, n, leg, w in st["plan"]]
+            # sig_plan 返回 5 元组 (code, name, leg, budget, shares)。
+            # budget 必须取信号原值，不能用 weight_actual 反推 —— 那是个
+            # 已扣成本的数，反推当预算会自我收紧到「买不起 1 手」。
+            st["plan"] = [
+                {"code": c, "name": n, "leg": leg,
+                 "budget": round(b, 2), "shares": s,
+                 "weight": round(b / (sig.get("capital") or 200000) * 100, 2)}
+                for c, n, leg, b, s in PE.sig_plan(sig)]
             st["plan_source"] = f"{sig.get('sig_date')} 当日信号（bar {sig.get('bar_date')}）"
         else:
             st["plan"] = [{"code": c, "name": n, "leg": leg, "weight": round(w * 100, 2)}
@@ -228,5 +262,6 @@ def api_refresh():
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8899
+    _banner()
     print(f"最强量化大佬 → http://127.0.0.1:{port}")
     app.run(host="0.0.0.0", port=port, debug=False, threaded=True)

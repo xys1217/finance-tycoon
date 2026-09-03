@@ -74,20 +74,24 @@ def load_signal() -> dict | None:
 
 
 def sig_plan(sig: dict) -> List[tuple]:
-    """把当日信号转成 (code, name, leg, weight) 跟单计划。
+    """把当日信号转成 (code, name, leg, budget, target_shares) 跟单计划。
 
-    权重直接取信号算好的实际占比（已含整手与成本），
-    这样模拟盘建出来的仓位与信号文档上的数字能对上。
+    budget 必须取信号算好的 `budget`（如防御仓单只 13,000、ETF 单只 9,667），
+    不能拿 `weight_actual` 反推 —— weight_actual 是**已扣掉成本之后**的实际
+    占比，再乘本金当预算等于自我收紧：只要实时价比 bar_date 收盘价高一点点
+    就会「差几块钱买不起 1 手」（三环集团预算 13,000，反推只有 11,100，
+    而 100 股实时价要 11,105），随后被第二轮补位灌成重仓。
+
+    target_shares 是信号算好的股数，跟单时优先照它下单，最忠于信号。
     """
     out = []
-    for x in sig.get("picks", []):
-        w = (x.get("weight_actual") or 0) / 100
-        if w > 0:
-            out.append((x["code"], x.get("name", ""), x.get("leg", ""), w))
-    for x in sig.get("etfs", []):
-        w = (x.get("weight_actual") or 0) / 100
-        if w > 0:
-            out.append((x["code"], x.get("name", ""), "ETF腿", w))
+    for x in sig.get("picks", []) + sig.get("etfs", []):
+        budget = float(x.get("budget") or 0)
+        shares = int(x.get("shares") or 0)
+        if budget <= 0 and shares <= 0:
+            continue
+        out.append((x["code"], x.get("name", ""),
+                    x.get("leg") or "ETF腿", budget, shares))
     return out
 
 
@@ -282,6 +286,45 @@ def buy_amount(acc: dict, code: str, target: float,
     return buy(acc, code, shares, price)
 
 
+def _buy_for_plan(acc: dict, code: str, budget: float,
+                  target_shares: int) -> tuple[bool, str, Optional[dict]]:
+    """按信号给定的目标股数下单，实时价偏离时逐手递减。
+
+    优先照信号算好的 shares 买（最忠于信号，模拟盘与信号文档能对上）。
+    但模拟盘用实时价、信号用 bar_date 收盘价，若实时价涨了导致超预算，
+    就逐手往下减，直到金额落回预算内（留 2% 容差）；减到 0 手才算失败。
+
+    预算兜底：信号没给 shares 时（回落到 V5_PLAN 的情况），按金额买。
+    """
+    if not target_shares:
+        return buy_amount(acc, code, budget)
+
+    q = Q.one(code)
+    px = ((q or {}).get("price") or 0) * (1 + SLIP)
+    if px <= 0:
+        return False, "取不到实时行情，无法计算手数", None
+
+    limit = budget * 1.02 if budget > 0 else float("inf")
+    lots = target_shares // LOT
+    while lots > 0:
+        amt = lots * LOT * px
+        if amt + max(COMM_MIN, amt * COMM_RATE) <= limit:
+            break
+        lots -= 1
+
+    if lots <= 0:
+        return (False,
+                f"实时价 {px:.2f} 元，{target_shares} 股需 "
+                f"{target_shares * px:,.0f} 元，超出预算 {budget:,.0f} 元（含 2% 容差）",
+                None)
+
+    shares = lots * LOT
+    ok, msg, t = buy(acc, code, shares)
+    if ok and shares < target_shares:
+        msg += f"（实时价偏高，由 {target_shares} 股减至 {shares} 股）"
+    return ok, msg, t
+
+
 # ---------------------------------------------------------------- 一键跟单
 def follow_plan(acc: dict) -> dict:
     """按 v5 定案组合一键建仓（各腿按目标权重分配，向下取整到整手）。
@@ -292,31 +335,53 @@ def follow_plan(acc: dict) -> dict:
       135/118 元，1 手要 1.1~1.4 万，按 5.8% 权重根本买不起，只能靠溢出资金补）。
     """
     sig = load_signal()
-    plan = sig_plan(sig) if sig else [(c, n, l, w) for c, n, l, w in V5_PLAN]
-
-    log: List[dict] = []
     equity0 = acc["cash"] + sum(
         (Q.one(c) or {}).get("price", 0) * p["shares"]
         for c, p in acc["positions"].items())
 
+    if sig:
+        plan = sig_plan(sig)
+    else:  # 兜底：内置 V5_PLAN 只有权重，按权益折算预算
+        plan = [(c, n, l, equity0 * w, 0) for c, n, l, w in V5_PLAN]
+
+    log: List[dict] = []
     pending: List[tuple] = []
-    for code, name, leg, w in plan:
+    for code, name, leg, budget, tgt in plan:
         ok, why = tradable(code)
         if not ok:
             log.append({"code": code, "name": name, "leg": leg, "ok": False, "msg": why})
             continue
-        ok, msg, t = buy_amount(acc, code, equity0 * w)
+        ok, msg, t = _buy_for_plan(acc, code, budget, tgt)
         rec = {"code": code, "name": name, "leg": leg, "ok": ok, "msg": msg,
                "shares": (t or {}).get("shares"), "amount": (t or {}).get("amount")}
         log.append(rec)
         if not ok:
-            pending.append((code, name, leg, rec))
+            pending.append((code, name, leg, budget, rec))
 
-    # 第二轮：剩余现金按未成交标的均分，只补得起的
-    if pending and acc["cash"] > 0:
-        share = acc["cash"] / len(pending)
-        for code, name, leg, rec in pending:
-            ok, msg, t = buy_amount(acc, code, share)
+    # 第二轮：剩余现金补位——**只对 ETF 腿**。
+    #
+    # 这段补位是为「国债 ETF 单价 135/118 元、单只预算 9,667 买不起 1 手」
+    # 设计的。原先它对任何买不起的标的都生效且无上限，个股一旦因实时价
+    # 涨了几分钱买不起 1 手，就会被灌进全部剩余现金：
+    #   三环集团目标 5.55%（11,100 元），实际被买成 400 股 44,419 元（22%），
+    #   账户现金从 13.4% 直接打到 0.7%。
+    # 现在限定：只有 ETF 腿能补，单只补位上限 = 预算 × 1.6，且账户总投入
+    # 不得超过本金的 95%（留 5% 现金垫）。
+    pending_etf = [p for p in pending if "ETF" in (p[2] or "")]
+    dropped = [p for p in pending if "ETF" not in (p[2] or "")]
+    for code, name, leg, budget, rec in dropped:
+        rec["msg"] = (rec["msg"] or "") + "（个股腿不参与现金补位，避免超配）"
+
+    if pending_etf and acc["cash"] > 0:
+        share = acc["cash"] / len(pending_etf)
+        for code, name, leg, budget, rec in pending_etf:
+            cap = budget * 1.6 if budget > 0 else share
+            room = equity0 * 0.95 - (equity0 - acc["cash"])
+            want = max(0.0, min(share, cap, room))
+            if want <= 0:
+                rec["msg"] = (rec["msg"] or "") + "（已达 95% 投入上限，不补位）"
+                continue
+            ok, msg, t = buy_amount(acc, code, want)
             if ok:
                 rec.update({"ok": True, "msg": msg + "（由剩余资金补齐）",
                             "shares": (t or {}).get("shares"),
