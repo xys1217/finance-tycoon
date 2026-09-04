@@ -27,3 +27,4 @@ web/index_static.html
 # positions.json 是例外——里面是**人工补录的持仓成本价**，丢了就没了。
 web/api/*.json
 !web/api/positions.json
+!web/api/paper.json

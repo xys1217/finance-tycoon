@@ -120,9 +120,25 @@ jobs:
         run: |
           python tools/check_signal_fresh.py web/api/daily_signal.json
 
+      - name: 自动跟单（照当日信号维护模拟盘）
+        # 用户外出期间由 CI 自动维护模拟盘：每天盘前照信号建仓/调仓。
+        # follow_plan 幂等：已持仓则只补到目标股数，到调仓日才换股；
+        # 非调仓日本质上是 no-op（维持）。所以每天跑是安全的。
+        # 依赖实时行情取现价做 2% 容差判断；境外 runner 若连不上会失败，
+        # 但不阻塞信号部署（continue-on-error）。
+        continue-on-error: true
+        run: |
+          python web/auto_follow.py
+
+      - name: 重新构建离线版（嵌入最新持仓）
+        # 跟单后持仓变了，重新打包让 Pages 显示最新模拟盘。
+        run: |
+          cd web
+          python build_static.py
+
       - name: 部署到 GitHub Pages 目录
         # 把离线版拷到 docs/，Pages 指向 /docs 后，
-        # 打开 https://<用户名>.github.io/<仓库名>/ 就是当日信号，
+        # 打开 https://<用户名>.github.io/<仓库名>/ 就是当日信号 + 模拟盘，
         # 不用下载、不用起 server。
         run: |
           mkdir -p docs
@@ -166,7 +182,7 @@ jobs:
           # -f 是必须的：web/api/*.json 被 .gitignore 排除（只有 positions.json 例外），
           # 但 daily_signal.json 必须进仓库，否则下次跑算不出「新进/调出」差异。
           git add -A daily/ docs/
-          git add -f web/api/daily_signal.json
+          git add -f web/api/daily_signal.json web/api/paper.json
           if git diff --cached --quiet; then
             echo "无变化（非交易日或信号未变）"
           else

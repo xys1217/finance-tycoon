@@ -1,0 +1,392 @@
+{
+ "meta": {
+  "init_cash": 200000.0,
+  "created": "2026-09-04 10:16:58"
+ },
+ "cash": 27825.52,
+ "positions": {
+  "601899": {
+   "code": "601899",
+   "name": "紫金矿业",
+   "shares": 300,
+   "avg_cost": 33.1798,
+   "etf": false,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "600176": {
+   "code": "600176",
+   "name": "中国巨石",
+   "shares": 300,
+   "avg_cost": 39.9966,
+   "etf": false,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "300408": {
+   "code": "300408",
+   "name": "三环集团",
+   "shares": 100,
+   "avg_cost": 107.8577,
+   "etf": false,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "601138": {
+   "code": "601138",
+   "name": "工业富联",
+   "shares": 200,
+   "avg_cost": 63.6586,
+   "etf": false,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "301526": {
+   "code": "301526",
+   "name": "国际复材",
+   "shares": 200,
+   "avg_cost": 26.3313,
+   "etf": false,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "512040": {
+   "code": "512040",
+   "name": "价值ETF富国",
+   "shares": 7900,
+   "avg_cost": 1.2218,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "512890": {
+   "code": "512890",
+   "name": "红利低波ETF华泰柏瑞",
+   "shares": 8000,
+   "avg_cost": 1.2078,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "510880": {
+   "code": "510880",
+   "name": "红利ETF华泰柏瑞",
+   "shares": 2800,
+   "avg_cost": 3.4372,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "512530": {
+   "code": "512530",
+   "name": "沪深300红利ETF建信",
+   "shares": 5800,
+   "avg_cost": 1.6666,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:49"
+  },
+  "510030": {
+   "code": "510030",
+   "name": "价值ETF华宝",
+   "shares": 8800,
+   "avg_cost": 1.0947,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:50"
+  },
+  "512390": {
+   "code": "512390",
+   "name": "中国低波ETF平安",
+   "shares": 7800,
+   "avg_cost": 1.2288,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:50"
+  },
+  "512750": {
+   "code": "512750",
+   "name": "基本面50ETF嘉实",
+   "shares": 6600,
+   "avg_cost": 1.4703,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:50"
+  },
+  "510010": {
+   "code": "510010",
+   "name": "180治理ETF交银",
+   "shares": 5400,
+   "avg_cost": 1.7907,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:50"
+  },
+  "159934": {
+   "code": "159934",
+   "name": "黄金ETF易方达",
+   "shares": 1000,
+   "avg_cost": 9.6026,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:50"
+  },
+  "518880": {
+   "code": "518880",
+   "name": "黄金ETF华安",
+   "shares": 1000,
+   "avg_cost": 9.1902,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:50"
+  },
+  "511260": {
+   "code": "511260",
+   "name": "十年国债ETF国泰",
+   "shares": 100,
+   "avg_cost": 136.0629,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:50"
+  },
+  "511020": {
+   "code": "511020",
+   "name": "国债ETF平安",
+   "shares": 100,
+   "avg_cost": 118.4182,
+   "etf": true,
+   "first_buy": "2026-09-04 14:43:50"
+  }
+ },
+ "trades": [
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "601899",
+   "name": "紫金矿业",
+   "shares": 300,
+   "price": 33.1631,
+   "raw_price": 33.13,
+   "amount": 9948.93,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 190046.07,
+   "etf": false
+  },
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "600176",
+   "name": "中国巨石",
+   "shares": 300,
+   "price": 39.9799,
+   "raw_price": 39.94,
+   "amount": 11993.97,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 178047.1,
+   "etf": false
+  },
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "300408",
+   "name": "三环集团",
+   "shares": 100,
+   "price": 107.8077,
+   "raw_price": 107.7,
+   "amount": 10780.77,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 167261.33,
+   "etf": false
+  },
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "601138",
+   "name": "工业富联",
+   "shares": 200,
+   "price": 63.6336,
+   "raw_price": 63.57,
+   "amount": 12726.72,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 154529.61,
+   "etf": false
+  },
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "301526",
+   "name": "国际复材",
+   "shares": 200,
+   "price": 26.3063,
+   "raw_price": 26.28,
+   "amount": 5261.26,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 149263.35,
+   "etf": false
+  },
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "512040",
+   "name": "价值ETF富国",
+   "shares": 7900,
+   "price": 1.2212,
+   "raw_price": 1.22,
+   "amount": 9647.48,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 139610.87,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "512890",
+   "name": "红利低波ETF华泰柏瑞",
+   "shares": 8000,
+   "price": 1.2072,
+   "raw_price": 1.206,
+   "amount": 9657.6,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 129948.27,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "510880",
+   "name": "红利ETF华泰柏瑞",
+   "shares": 2800,
+   "price": 3.4354,
+   "raw_price": 3.432,
+   "amount": 9619.12,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 120324.15,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:49",
+   "side": "买入",
+   "code": "512530",
+   "name": "沪深300红利ETF建信",
+   "shares": 5800,
+   "price": 1.6657,
+   "raw_price": 1.664,
+   "amount": 9661.06,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 110658.09,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:50",
+   "side": "买入",
+   "code": "510030",
+   "name": "价值ETF华宝",
+   "shares": 8800,
+   "price": 1.0941,
+   "raw_price": 1.093,
+   "amount": 9628.08,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 101025.01,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:50",
+   "side": "买入",
+   "code": "512390",
+   "name": "中国低波ETF平安",
+   "shares": 7800,
+   "price": 1.2282,
+   "raw_price": 1.227,
+   "amount": 9579.96,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 91440.05,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:50",
+   "side": "买入",
+   "code": "512750",
+   "name": "基本面50ETF嘉实",
+   "shares": 6600,
+   "price": 1.4695,
+   "raw_price": 1.468,
+   "amount": 9698.7,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 81736.35,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:50",
+   "side": "买入",
+   "code": "510010",
+   "name": "180治理ETF交银",
+   "shares": 5400,
+   "price": 1.7898,
+   "raw_price": 1.788,
+   "amount": 9664.92,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 72066.43,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:50",
+   "side": "买入",
+   "code": "159934",
+   "name": "黄金ETF易方达",
+   "shares": 1000,
+   "price": 9.5976,
+   "raw_price": 9.588,
+   "amount": 9597.6,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 62463.83,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:50",
+   "side": "买入",
+   "code": "518880",
+   "name": "黄金ETF华安",
+   "shares": 1000,
+   "price": 9.1852,
+   "raw_price": 9.176,
+   "amount": 9185.2,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 53273.63,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:50",
+   "side": "买入",
+   "code": "511260",
+   "name": "十年国债ETF国泰",
+   "shares": 100,
+   "price": 136.0129,
+   "raw_price": 135.877,
+   "amount": 13601.29,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 39667.34,
+   "etf": true
+  },
+  {
+   "ts": "2026-09-04 14:43:50",
+   "side": "买入",
+   "code": "511020",
+   "name": "国债ETF平安",
+   "shares": 100,
+   "price": 118.3682,
+   "raw_price": 118.25,
+   "amount": 11836.82,
+   "fee": 5.0,
+   "tax": 0.0,
+   "cash_after": 27825.52,
+   "etf": true
+  }
+ ],
+ "snapshots": [
+  {
+   "date": "2026-09-04",
+   "equity": 200010.92,
+   "hs300": 4548.05
+  }
+ ]
+}
