@@ -20,15 +20,32 @@
 
 ## 第 2 步：推送
 
-把整个 `/workspace` 目录拷到本地（沙箱里的文件你已经在用了），然后：
+**本次已经替你推好了。** 仓库地址：
+
+```
+https://github.com/xys1217/finance-tycoon
+```
+
+如果你以后换机器还要推送，注意：沙箱到 GitHub 的 **22 端口 SSH 会被墙 / 超时**，
+需要让 SSH 走 **443 端口**。在本机 `~/.ssh/config` 里写：
+
+```
+Host github.com
+    Hostname ssh.github.com
+    Port 443
+    User git
+    IdentityFile ~/.ssh/id_ed25519
+    StrictHostKeyChecking no
+    IdentitiesOnly yes
+```
+
+然后再推：
 
 ```bash
 cd <你的项目目录>
-git remote add origin git@github.com:<用户名>/<仓库名>.git
+git remote add origin git@github.com:xys1217/finance-tycoon.git
 git push -u origin main
 ```
-
-走 HTTPS 也行：`https://github.com/<用户名>/<仓库名>.git`
 
 > 仓库里已经 `.gitignore` 掉了 K 线缓存和日志，push 体积不大。
 > `docs/`（Pages 部署源）和 `.github/`（workflow）**必须**推上去。
