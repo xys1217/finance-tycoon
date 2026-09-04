@@ -37,17 +37,28 @@ def _banner():
             stderr=subprocess.DEVNULL, timeout=5).decode().strip()
     except Exception:
         rev = "?"
+
+    # 只看**代码文件**有没有未提交改动。
+    # 曾经笼统地看 `git status --porcelain`，而 web/api/*.json 是每天重跑
+    # 都会变的运行时数据（当时还进了版本管理），于是这行警告天天喊，
+    # 真改了 engine.py 时反而被当成背景噪音忽略掉 —— 典型的狼来了。
+    dirty = []
     try:
-        dirty = bool(subprocess.check_output(
+        out = subprocess.check_output(
             ["git", "-C", HERE, "status", "--porcelain"],
-            stderr=subprocess.DEVNULL, timeout=5).decode().strip())
+            stderr=subprocess.DEVNULL, timeout=5).decode()
+        for line in out.splitlines():
+            f = line[3:].strip().strip('"')
+            if f.endswith((".py", ".html", ".sh")):
+                dirty.append(f)
     except Exception:
-        dirty = False
+        pass
+
     print(f"[server] 启动 {datetime.now():%Y-%m-%d %H:%M:%S} | "
-          f"代码 commit {rev}{' + 未提交改动' if dirty else ''}")
+          f"代码 commit {rev}{' + 未提交代码改动' if dirty else ''}")
     if dirty:
-        print("[server] ⚠ 工作区有未提交改动，当前进程加载的可能是旧代码；"
-              "改完 engine.py / daily_signal.py 必须重启本进程")
+        print("[server] ⚠ 有未提交的**代码**改动，当前进程加载的可能是旧代码；"
+              f"改完这些文件必须重启本进程：{', '.join(dirty[:5])}")
 
 
 def _load(name):

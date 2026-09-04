@@ -20,3 +20,10 @@ __pycache__/
 # 页面产物（由 build_static.py 从 index_src.html 生成，不入库）
 web/index.html
 web/index_static.html
+
+# 运行时数据产物：每天重跑都会变，不该进版本管理。
+# 否则每跑一次信号 git 就脏一次，server 启动时那句
+# 「工作区有未提交改动」天天喊，真改了代码时反而被当成常态忽略掉。
+# positions.json 是例外——里面是**人工补录的持仓成本价**，丢了就没了。
+web/api/*.json
+!web/api/positions.json
