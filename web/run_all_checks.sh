@@ -74,6 +74,15 @@ else
   grep -E "✗|->" /tmp/_rep.log | head -15
 fi
 
+# ---------------------------------------------------------------- 2.7 风险提醒
+step "2.7 持仓风险提醒（四级 alert 端到端）"
+if python3.11 test_risk_alert.py > /tmp/_risk.log 2>&1; then
+  ok "风险提醒 $(grep -oE '[0-9]+ 通过 / [0-9]+ 失败' /tmp/_risk.log | tail -1)"
+else
+  bad "风险提醒验证失败："
+  grep -E "✗" /tmp/_risk.log | head -10
+fi
+
 # ---------------------------------------------------------------- 3. API
 step "3. API 全端点 × 参数矩阵"
 if python3.11 test_api_matrix.py "${BASE}" > /tmp/_api.log 2>&1; then

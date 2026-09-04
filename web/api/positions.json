@@ -1,31 +1,8 @@
 {
- "601288": {
-  "name": "农业银行",
-  "leg": "防御仓",
-  "lots": 0,
-  "cost": null,
-  "entry_date": "2026-09-02",
-  "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"
- },
- "600016": {
-  "name": "民生银行",
-  "leg": "防御仓",
-  "lots": 0,
-  "cost": null,
-  "entry_date": "2026-09-02",
-  "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"
- },
- "601166": {
-  "name": "兴业银行",
-  "leg": "防御仓",
-  "lots": 0,
-  "cost": null,
-  "entry_date": "2026-09-02",
-  "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"
- },
  "601899": {
   "name": "紫金矿业",
   "cost": 33.35,
-  "lots": 3
+  "lots": 3,
+  "entry_date": "2026-09-04"
  }
 }
