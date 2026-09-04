@@ -733,7 +733,16 @@ def generate(sig_date: str | None = None, pools=("000300", "000905"),
                                 "cmf20": round(float(hot_pick["cmf20"]), 3)}})
 
     # ── ETF 腿：月频调仓 ──
-    etf_q = {c: None for c, *_ in ETF_POOL}
+    # 口径铁律（与个股腿一致）：算股数一律用 bar_date 收盘，不用盘中现价。
+    #
+    # 腾讯快照 p[3]=现价、p[4]=昨收。盘前两者相等，盘中现价会漂。
+    # 2026-09-04 实测：同一 bar_date，09:08 跑出 159934 买 1000 份，
+    # 09:16 跑出 900 份（现价涨 1.58%，整手从 1000 跳档到 900），
+    # 单只差 814 元、总投入差 721 元 —— 同一天两份互相矛盾的清单。
+    #
+    # 「昨收」恒等于最后一个完整交易日的收盘价，正是 bar_date 口径，
+    # 且不需要额外拉日线（ak.fund_etf_hist_em 实测连不上，也不必依赖它）。
+    etf_q, etf_live = {c: None for c, *_ in ETF_POOL}, {}
     try:
         q = ",".join(pfx(c) + c for c in etf_q)
         import requests
@@ -744,8 +753,10 @@ def generate(sig_date: str | None = None, pools=("000300", "000905"),
             m = re.search(r'v_(s[hz]\d{6})="(.*)"', line)
             if m:
                 p = m.group(2).split("~")
+                if len(p) > 4 and p[4]:
+                    etf_q[m.group(1)[2:]] = float(p[4])      # 昨收 = bar_date 收盘（权威）
                 if len(p) > 3 and p[3]:
-                    etf_q[m.group(1)[2:]] = float(p[3])
+                    etf_live[m.group(1)[2:]] = float(p[3])   # 现价，仅展示参考
     except Exception:
         pass
     etfs, etf_ok = [], 0
@@ -758,8 +769,13 @@ def generate(sig_date: str | None = None, pools=("000300", "000905"),
             continue
         o = plan_order(px, W_ETF_TOTAL / N_ETF, etf=True)
         etf_ok += 1
+        lv = etf_live.get(c)
         etfs.append({"leg": "ETF腿", "code": c, "name": nm, "sector": sec,
-                     "price": round(px, 3), **o})
+                     "price": round(px, 3),
+                     # 现价只作参考，不参与任何计算；盘中与 price 的偏离
+                     # 就是「今天开盘后会买贵/买便宜多少」的直观提示。
+                     **({"snap_price": round(lv, 3)} if lv else {}),
+                     **o})
 
     # ── 第二轮：剩余现金补位 ──
     # 十年国债 ETF 135.8 元 / 国债 ETF 118.2 元，1 手要 1.36 万 / 1.18 万，
@@ -986,6 +1002,8 @@ if __name__ == "__main__":
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--quiet", action="store_true")
     ap.add_argument("--no-cache", action="store_true", help="忽略 K 线缓存，强制重拉")
+    ap.add_argument("--force", action="store_true",
+                    help="允许用更晚交易日的信号覆盖已有产物（默认拒绝）")
     a = ap.parse_args()
 
     pools = tuple(("000300" if p.strip() == "300" else
@@ -1004,6 +1022,25 @@ if __name__ == "__main__":
         os.makedirs(DAILY, exist_ok=True)
         p1 = os.path.join(API, "daily_signal.json")
         p2 = os.path.join(DAILY, f"{d['sig_date']}_信号.md")
+
+        # ── 覆盖保护 ──
+        # resolve_sig_date 在 09:15 之后会给出「下一交易日」。
+        # 直接覆盖 daily_signal.json，会把早上刚生成的当日信号冲掉：
+        # 用户 10 点刷新页面，今天的信号就没了，看到的是下周一的。
+        # CI 若延迟到开盘后才轮到，同样中招。
+        # 规则：新信号比现有产物更晚时拒绝覆盖，除非 --force。
+        if not a.force and os.path.exists(p1):
+            try:
+                old_sig = str(json.load(open(p1, encoding="utf-8")).get("sig_date", ""))
+            except Exception:
+                old_sig = ""
+            if old_sig and d["sig_date"] > old_sig:
+                raise SystemExit(
+                    f"拒绝覆盖：现有产物是 {old_sig} 的信号，本次算出的是 "
+                    f"{d['sig_date']}（更晚）。\n"
+                    f"  盘中/盘后重跑会把当日信号冲掉，页面就看不到今天的了。\n"
+                    f"  确需生成 {d['sig_date']} 的信号请加 --force。")
+
         atomic_write_json(p1, d)
         open(p2, "w", encoding="utf-8").write(to_markdown(d))
         print(f"\n已写入：\n  {p1}\n  {p2}")

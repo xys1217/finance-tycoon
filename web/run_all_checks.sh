@@ -63,6 +63,17 @@ else
   grep -E "✗" /tmp/_sig.log | head -10
 fi
 
+# ---------------------------------------------------------------- 2.5 可复现性
+step "2.5 可复现性（同一 bar_date 连跑两次必须一致）"
+# 这一项抓到过前五轮全部漏掉的真 bug：ETF 腿用盘中现价算股数，
+# 同一天两次跑出 1000 份 / 900 份两份互相矛盾的清单。
+if timeout 600 python3.11 test_reproducibility.py > /tmp/_rep.log 2>&1; then
+  ok "可复现性 $(grep -oE '投入 [0-9,\.]+ 元 / 个股 [0-9]+ 只 / ETF [0-9]+ 只' /tmp/_rep.log | tail -1)"
+else
+  bad "信号不可复现："
+  grep -E "✗|->" /tmp/_rep.log | head -15
+fi
+
 # ---------------------------------------------------------------- 3. API
 step "3. API 全端点 × 参数矩阵"
 if python3.11 test_api_matrix.py "${BASE}" > /tmp/_api.log 2>&1; then

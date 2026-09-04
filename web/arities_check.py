@@ -101,8 +101,19 @@ class Collector(ast.NodeVisitor):
 
 
 def collect_all(root: str):
-    """跨模块合并：funcname -> {length: [(file, line)]}"""
-    merged: dict[str, dict[int, list[tuple[str, int]]]] = defaultdict(
+    """跨模块合并，返回两份索引：
+
+    by_file[(relpath, funcname)] -> {length: [line]}
+        用于 A 段（同一个函数的多个 return 分支长度是否一致）。
+        必须带文件路径：main() 这种通用名在多个文件里都有，
+        只按函数名聚合会把 gen_cache.main() 和 test_x.main() 混成一团，
+        报出根本不存在的「不一致」—— 误报多了大家就不看了。
+    by_name[funcname] -> {length: [(file, line)]}
+        用于 B/C 段（跨文件调用点的解包长度），这个必须按函数名查。
+    """
+    by_file: dict[tuple[str, str], dict[int, list[int]]] = defaultdict(
+        lambda: defaultdict(list))
+    by_name: dict[str, dict[int, list[tuple[str, int]]]] = defaultdict(
         lambda: defaultdict(list))
     for p in iter_py(root):
         try:
@@ -112,10 +123,12 @@ def collect_all(root: str):
             continue
         c = Collector(p)
         c.visit(tree)
+        rel = os.path.relpath(p, root)
         for fname, lens in c.rets.items():
             for n, lines in lens.items():
-                merged[fname][n].extend((os.path.relpath(p, root), ln) for ln in lines)
-    return merged
+                by_file[(rel, fname)][n].extend(lines)
+                by_name[fname][n].extend((rel, ln) for ln in lines)
+    return by_file, by_name
 
 
 class UnpackChecker(ast.NodeVisitor):
@@ -229,24 +242,24 @@ class UnpackChecker(ast.NodeVisitor):
 
 
 def main() -> int:
-    table = collect_all(ROOT)
+    by_file, table = collect_all(ROOT)
     print(f"扫描 {ROOT}")
-    print(f"收集到 {len(table)} 个返回元组的函数\n")
+    print(f"收集到 {len(by_file)} 个（文件, 函数）组合\n")
 
-    # A. 同一函数返回长度不一致
+    # A. 同一函数返回长度不一致（按 文件+函数名 判，避免同名函数互相污染）
     print("=" * 68)
     print("A. 返回元组长度不一致的函数（调用方极易漏改）")
     print("=" * 68)
     bad_var = 0
-    for name, lens in sorted(table.items()):
+    for (fpath, fname), lens in sorted(by_file.items()):
         if len(lens) > 1:
             bad_var += 1
             desc = "、".join(
                 f"{n} 元组({len(v)} 处)" for n, v in sorted(lens.items()))
-            print(f"  ⚠ {name}()：{desc}")
+            print(f"  ⚠ {fpath} :: {fname}()：{desc}")
             for n, locs in sorted(lens.items()):
-                for f, ln in locs[:3]:
-                    print(f"      {n} 元组 @ {f}:{ln}")
+                for ln in locs[:3]:
+                    print(f"      {n} 元组 @ {fpath}:{ln}")
     if not bad_var:
         print("  无 ✓")
 

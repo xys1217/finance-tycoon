@@ -70,15 +70,15 @@
    "name": "紫金矿业",
    "leg": "",
    "cost": 33.35,
-   "price": 33.31,
+   "price": 33.85,
    "lots": 3,
-   "pnl_pct": -0.12,
+   "pnl_pct": 1.5,
    "hit_stop": false
   }
  ],
  "sig_date": "2026-09-04",
  "bar_date": "2026-09-03",
- "generated_at": "2026-09-04 08:54:05",
+ "generated_at": "2026-09-04 09:25:01",
  "capital": 200000.0,
  "config": {
   "defense": "4 只 × 6.5% = 26.0%",
@@ -129,7 +129,7 @@
    "weight_actual": 6.4,
    "why": "修正六因子 +0.927",
    "detail": {
-    "z_bp": -0.791,
+    "z_bp": -0.792,
     "z_size": 0.39,
     "z_mom": 5.175,
     "z_rev": -1.151,
@@ -177,7 +177,7 @@
    "weight_actual": 6.33,
    "why": "修正六因子 +0.873",
    "detail": {
-    "z_bp": -0.873,
+    "z_bp": -0.874,
     "z_size": 2.631,
     "z_mom": 0.765,
     "z_rev": 0.511,
@@ -214,6 +214,7 @@
    "name": "价值ETF富国",
    "sector": "宽基价值",
    "price": 1.218,
+   "snap_price": 1.22,
    "shares": 7900,
    "lots": 79,
    "amount": 9631.82,
@@ -229,6 +230,7 @@
    "name": "红利低波ETF华泰柏瑞",
    "sector": "红利",
    "price": 1.2,
+   "snap_price": 1.199,
    "shares": 8000,
    "lots": 80,
    "amount": 9609.6,
@@ -244,6 +246,7 @@
    "name": "红利ETF华泰柏瑞",
    "sector": "红利",
    "price": 3.436,
+   "snap_price": 3.435,
    "shares": 2800,
    "lots": 28,
    "amount": 9630.42,
@@ -259,6 +262,7 @@
    "name": "沪深300红利ETF建信",
    "sector": "红利",
    "price": 1.66,
+   "snap_price": 1.675,
    "shares": 5800,
    "lots": 58,
    "amount": 9637.63,
@@ -274,6 +278,7 @@
    "name": "价值ETF华宝",
    "sector": "宽基价值",
    "price": 1.089,
+   "snap_price": 1.096,
    "shares": 8800,
    "lots": 88,
    "amount": 9592.78,
@@ -289,6 +294,7 @@
    "name": "中国低波ETF平安",
    "sector": "宽基价值",
    "price": 1.227,
+   "snap_price": 1.215,
    "shares": 7800,
    "lots": 78,
    "amount": 9580.17,
@@ -304,6 +310,7 @@
    "name": "基本面50ETF嘉实",
    "sector": "宽基价值",
    "price": 1.461,
+   "snap_price": 1.475,
    "shares": 6600,
    "lots": 66,
    "amount": 9652.24,
@@ -319,6 +326,7 @@
    "name": "180治理ETF交银",
    "sector": "宽基价值",
    "price": 1.784,
+   "snap_price": 1.779,
    "shares": 5400,
    "lots": 54,
    "amount": 9643.23,
@@ -334,6 +342,7 @@
    "name": "十年国债ETF国泰",
    "sector": "国债",
    "price": 135.861,
+   "snap_price": 135.865,
    "shares": 100,
    "amount": 13599.69,
    "fee": 5.0,
@@ -350,6 +359,7 @@
    "name": "国债ETF平安",
    "sector": "国债",
    "price": 118.231,
+   "snap_price": 118.3,
    "shares": 100,
    "amount": 11834.92,
    "fee": 5.0,
@@ -366,6 +376,7 @@
    "name": "黄金ETF易方达",
    "sector": "黄金",
    "price": 9.51,
+   "snap_price": 9.632,
    "shares": 1000,
    "lots": 10,
    "amount": 9519.51,
@@ -381,6 +392,7 @@
    "name": "黄金ETF华安",
    "sector": "黄金",
    "price": 9.105,
+   "snap_price": 9.21,
    "shares": 1000,
    "lots": 10,
    "amount": 9114.1,
@@ -444,20 +456,14 @@
   {
    "code": "601398",
    "name": "工商银行",
-   "score": 0.838,
+   "score": 0.837,
    "price": 8.1
   },
   {
    "code": "600015",
    "name": "华夏银行",
-   "score": 0.788,
+   "score": 0.787,
    "price": 6.27
-  },
-  {
-   "code": "601668",
-   "name": "中国建筑",
-   "score": 0.772,
-   "price": 4.37
   },
   {
    "code": "600016",
@@ -478,9 +484,15 @@
    "price": 5.71
   },
   {
+   "code": "601668",
+   "name": "中国建筑",
+   "score": 0.755,
+   "price": 4.37
+  },
+  {
    "code": "601288",
    "name": "农业银行",
-   "score": 0.726,
+   "score": 0.725,
    "price": 6.89
   },
   {

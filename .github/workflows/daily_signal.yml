@@ -115,31 +115,10 @@ jobs:
         # 防静默失败的最后一道闸。
         # 「任务绿了但信号是昨天的」正是本地定时任务踩过的坑：
         # 状态显示已执行、时间也前进，就是没有产物。
-        # 这里直接读信号自带的 data_freshness，stale=true 就红。
+        # 检查逻辑放在 tools/check_signal_fresh.py，不内联在 workflow 里 ——
+        # 内联的 heredoc 没法单独跑、没法喂坏数据做负向测试。
         run: |
-          python - <<'PY'
-          import json, sys
-          p = "web/api/daily_signal.json"
-          try:
-              d = json.load(open(p))
-          except Exception as e:
-              print(f"::error::读不到 {p}：{e}")
-              sys.exit(1)
-          f   = d.get("data_freshness", {})
-          bar = d.get("bar_date")
-          sig = d.get("sig_date")
-          print(f"sig_date={sig}  bar_date={bar}  "
-                f"stale={f.get('stale')}  bars_behind={f.get('bars_behind')}")
-          if f.get("stale"):
-              print("::error::信号数据不新鲜（stale=true），"
-                    f"bar_date={bar}，期望={f.get('expected_bar_date')}，"
-                    f"落后 {f.get('bars_behind')} 个交易日。")
-              sys.exit(1)
-          if not d.get("picks") or not d.get("etfs"):
-              print("::error::信号内容为空（picks 或 etfs 缺失），不能部署。")
-              sys.exit(1)
-          print("::notice::信号新鲜度检查通过")
-          PY
+          python tools/check_signal_fresh.py web/api/daily_signal.json
 
       - name: 部署到 GitHub Pages 目录
         # 把离线版拷到 docs/，Pages 指向 /docs 后，

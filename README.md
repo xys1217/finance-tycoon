@@ -34,6 +34,12 @@ bash /workspace/web/run_daily_signal.sh
 | `web/test_api_matrix.py` | API 全端点 × 正常/缺失/非法/边界参数矩阵（49 项） |
 | `web/test_ui_flow.py` | 前端交互测试（**真点按钮**，15 项） |
 | `web/test_offline.py` | 离线版 `file://` 模式检查 |
+| **`web/test_reproducibility.py`** | ⚑ **可复现性检查**：同一 bar_date 连跑两次，关键字段必须一致（抓到过 ETF 用现价的 bug） |
+| **`tools/check_datasource.py`** | 数据源连通性探测（腾讯/新浪/交易日历/东财），CI 第一步跑 |
+| **`tools/check_signal_fresh.py`** | 信号产物体检（防「任务绿了但信号是昨天的」），带 `--selftest` 负向自测 |
+| `.github/workflows/daily_signal.yml` | GitHub Actions 每日信号（北京 06:00/07:00/08:30 三次触发） |
+| `docs/` | GitHub Pages 部署源（离线版 HTML + 当日信号 JSON） |
+| `requirements.txt` | CI 用依赖（不含 flask / playwright） |
 | `web/modules/signal/daily_signal.py` | **信号生成器**（六因子 + 三闸门 + 整手下单测算） |
 | `web/modules/paper/engine.py` | 模拟盘引擎（真实摩擦成本） |
 | `web/modules/paper/quote.py` | 实时行情层（腾讯主 / 新浪备） |
@@ -261,6 +267,124 @@ J("/api/paper/order", {method:"POST", body:...})   // 第二个实参被静默�
 
 ---
 
+## 第六轮（2026-09-04 上午）—— 部署到 GitHub Actions，顺手挖出两个更深的 bug
+
+### 背景
+
+定时任务在沙箱里跑不通（第五轮实测：执行环境与文件系统隔离），
+于是选了 **GitHub Actions** 作为 7×24 的运行环境。
+`.github/workflows/daily_signal.yml` 已写好，见下面「部署清单」。
+
+为了交付前确认可用，我做了两件以前没做过的事，各挖出一个 bug：
+
+1. **在 `docs/` 起 http 服务模拟 GitHub Pages**，用 Playwright 真打开看
+2. **从 git 干净克隆一份到 `/tmp` 跑完整流程**（CI 的 checkout 状态）
+
+### 🔴 Bug A：Pages / 静态版上，当日信号区是空白的
+
+第四轮我修 `J()` 时改用了 `await r.text()`，但 `build_static.py`
+注入的 fetch 劫持层只实现了 `json()`。在线模式走真 fetch 没问题；
+静态版和 Pages 走劫持层就抛 `TypeError: r.text is not a function`。
+
+**为什么前五轮没发现**：页面其它模块照常渲染，字符数够、没有未捕获的
+JS 错误 —— 「有内容 / 无报错」这类检查**全过**，唯独最重要的当日信号是空的。
+
+| | 修复前 | 修复后 |
+|---|---|---|
+| `#sigBox` | 112 字符 `信号加载失败：TypeError: r.text is not a function` | 2454 字符，完整信号 |
+
+修法是双保险：劫持层补 `text()`，前端 `J()` 加 `typeof r.text === "function"` 兜底。
+
+### 🔴 Bug B：ETF 腿用盘中现价算股数，同一天跑出两份互相矛盾的清单
+
+个股腿严格执行 `D["price"] = D["close_bar"]`（bar_date 收盘），
+ETF 腿却直接取腾讯快照的**现价** `p[3]`。盘前两者相等，盘中就分叉：
+
+| 时间 | 159934 价格 | 算出股数 | 金额 |
+|---|---|---|---|
+| 09:08 | 9.510（= 昨收） | 1000 份 | 9,519 元 |
+| 09:16 | 9.663（= 现价） | **900 份** | 8,705 元 |
+
+涨 1.58% 触发整手跳档，单只差 814 元，总投入差 721 元。
+**同一天、同一 bar_date、同一份代码，两份不一样的买入清单。**
+
+修法：改用腾讯快照的 `p[4]`（昨收）。它恒等于最后一个完整交易日的收盘价，
+正是 bar_date 口径，而且不用额外拉日线（`ak.fund_etf_hist_em` 实测连不上）。
+现价保留为 `snap_price` 字段，只展示、不参与计算。
+
+> **这一条比 Bug A 更值得警惕**：前五轮检查一项没漏地全绿，
+> 但从来没有一项问过「**再跑一次还是不是这个结果**」。
+> 可复现性是信号系统的底线 —— 不可复现 = 无法归因 = 出问题查不出来。
+
+### 🔴 Bug C：盘中重跑会把当天的信号冲掉
+
+`resolve_sig_date` 在 09:15 之后返回「下一交易日」。直接覆盖
+`daily_signal.json` 的后果是：早上 08:30 生成的当日信号，
+用户 10 点刷新一下页面就没了，看到的是下周一的。
+CI 若延迟到开盘后才轮到，同样中招。
+
+修法：写入前检查，新信号比现有产物更晚时**拒绝覆盖**（`--force` 可破）。
+
+### 新增的检查：可复现性
+
+`web/test_reproducibility.py` —— 同一 bar_date 连跑两次，比对全部字段。
+
+判定分三级，不是一刀切：
+
+| 级别 | 字段 | 处理 |
+|---|---|---|
+| 严格 | `code` `shares` `amount` `cost` `price` | 不一致即失败（这些决定买什么、买多少） |
+| 容差 | `score` `z_*` `cmf20` | 相对误差 ≤ 0.5% 放行并提示 |
+| 跳过 | `generated_at` `stop_loss_scan` 两个 ranking | 本来就随行情变（止损**必须**看实时价） |
+
+容差这一级不是偷懒：快照的 `pb`/`mktcap` 有取整精度，
+按 `close_bar/snap_price` 折回 bar_date 后会残留 1e-3 级抖动，
+实测表现为 `z_bp: -0.875 → -0.874`、`score: 0.756 → 0.758`。
+**盘前跑时 ratio 恒等于 1，此抖动为零** —— CI 的三次触发都在盘前。
+
+该检查已做负向验证：把 ETF 改回「用现价」后，它正确报出
+`etfs.511260.price`、`etfs.512890.amount`、`etfs.518880.cost` 等漂移。
+
+### 顺手修掉的工具缺陷
+
+- **`arities_check.py` 误报**：按函数名聚合，把 `gen_cache.py` 和
+  `test_reproducibility.py` 里两个同名 `main()` 混成一团，报出
+  根本不存在的「不一致」。改为按 `(文件, 函数名)` 聚合。
+  修完做了负向测试，确认 A 段仍能抓到同文件内的真不一致。
+- **workflow 里 `git add` 会失败**：`web/api/daily_signal.json` 被
+  `.gitignore` 排除（只有 `positions.json` 例外），改成 `git add -f`。
+- **CI 缺 K 线缓存**：`data/kline_cache` 被 gitignore，每次 checkout 都是空的，
+  等于每天重拉 641 只全量日线。补 `actions/cache`。
+- **cron 只排一次**：GitHub 官方说明 schedule 在高峰期会延迟，
+  只排 08:30 可能错过开盘。改为 06:00 / 07:00 / 08:30 三次。
+
+### CI 模拟实测
+
+从 git 干净克隆到 `/tmp/ci_sim`（`data/kline_cache` 和信号产物都不在，
+正是 checkout 状态）跑完整流程：
+
+```
+[2026-09-04 09:14:16] 开始生成当日信号
+  信号日 2026-09-04 | bar_date 2026-09-03 | 维持上期持仓，不换股
+  个股 5 只 + ETF 12 只 | 投入 172,439 元（86.22%）| 现金 27,561 元（13.78%）
+[09:16:01] 完成
+退出码=0    耗时 1 分 45 秒（含从零拉 641 只 K 线）
+```
+
+### 当前全量检查
+
+| 段 | 结果 |
+|---|---|
+| pyflakes | 干净 |
+| 返回值/解包一致性 | 干净（A 段误报已修，负向测试确认仍有效） |
+| 信号自检 | 33 / 33 |
+| **可复现性** | 关键字段完全一致 |
+| API 矩阵 | 49 / 49 |
+| 前端交互（真点按钮） | 15 / 15 |
+| 离线版 | 正常 |
+
+---
+
 ## v5 定案配置
 
 | 项 | 值 |
@@ -326,16 +450,79 @@ J("/api/paper/order", {method:"POST", body:...})   // 第二个实参被静默�
 6. ETF 腿目前是**固定 12 只池**，没有实现真正的月度重排打分
    （v5 定案要求月频调仓，现在是「沿用上期名单」）
 7. 并发安全已加固（`fcntl.flock` 进程锁 + `os.replace` 原子写）
-8. 🔴 **把信号生成搬到 7×24 的机器上**（最关键）
+8. 🔴 **把信号生成搬到 7×24 的机器上**（最关键，✅ **代码侧已就绪，等你推仓库**）
    —— 沙箱休眠会让定时任务接不住、server 进程消失（2026-09-04 实测）。
    三选一：
-   - **自己的服务器 / NAS**：最省事，直接挂 cron
-     `30 8 * * 1-5 /workspace/web/run_daily_signal.sh`
-   - **GitHub Actions**：免费，需把仓库推上去，且外网要能访问行情源
+   - **GitHub Actions**：**文件已全部写好**（workflow + 连通性自检 +
+     信号体检 + Pages 部署），只需建仓库、push、开 Pages。见下面「部署清单」。
+     风险：runner 在境外，国内行情源可能被限流 —— workflow 里已内置自检，
+     不通会显式 `exit 1`，不会静默失败。
+   - **自己的服务器 / NAS**：最省事也最可靠，直接挂 cron
+     `30 8 * * 1-5 /path/to/web/run_daily_signal.sh`
    - **云函数**（腾讯云 SCF / 阿里云 FC）：定时触发器 + 对象存储存产物
 
-   在此之前，每天早上**手动跑一次** `bash web/run_daily_signal.sh`
-   是最稳的兜底；只看信号的话双击离线版 HTML 即可，不依赖 server。
+   **在上述任一方案跑通之前**，每天早上**手动跑一次**
+   `bash web/run_daily_signal.sh` 是最稳的兜底；
+   只看信号的话双击离线版 HTML 即可，不依赖 server。
+
+---
+
+## 部署清单（GitHub Actions，约 10 分钟）
+
+`gh` 在本沙箱未登录，也没有 remote，所以这几步得你在自己机器上做。
+
+### 1. 建仓库并推送
+
+```bash
+cd /workspace
+git remote add origin git@github.com:<你的用户名>/<仓库名>.git
+git push -u origin main
+```
+
+用 HTTPS 也行：`https://github.com/<用户名>/<仓库名>.git`。
+仓库**公开或私有都可以** —— 公开仓库 Actions 免费额度无限，
+私有仓库每月 2000 分钟，本 workflow 每天跑约 2 分钟，够用。
+
+### 2. 开启 GitHub Pages
+
+仓库 **Settings → Pages → Source** 选 `Deploy from a branch`，
+分支 `main`、目录 **`/docs`**，保存。
+
+之后打开 `https://<用户名>.github.io/<仓库名>/` 就是当日信号，
+不用起 server、不用下载。**建议先在手机上存个书签。**
+
+### 3. 手动触发一次，验证连通性
+
+仓库 **Actions → 每日 A 股交易信号 → Run workflow**。
+
+这一步**必须做**，它回答的是本方案唯一的不确定项：
+**GitHub 的境外 runner 能不能访问腾讯 / 新浪 / 东财的行情接口。**
+
+- 绿了 → 看运行摘要里的信号日和数据新鲜度，Pages 页面也该更新了
+- 红了 → 摘要里会明确写「行情数据源在此网络环境下不可用」，
+  并给出三个出路（国内服务器 / 自托管 runner / 手动跑）
+
+### 4. 之后就不用管了
+
+workflow 在北京时间 **06:00 / 07:00 / 08:30** 各触发一次（周一至周五），
+任一一次成功即可；后两次发现当天信号已生成会跳过。
+非交易日由脚本内的交易日历判断，自动跳过。
+
+排三次是因为 GitHub 官方说明 schedule 在高峰期会延迟，
+只排一次可能错过 09:30 开盘。
+
+### 自检设计（防止再次静默失败）
+
+本地定时任务那次事故的特征是：**状态显示已执行、时间往前走，
+但什么都没发生**。所以这个 workflow 每一步都设计成「说人话」：
+
+| 步骤 | 作用 |
+|---|---|
+| 数据源连通性自检 | 不通就 `exit 1` 明确报错，不假装成功 |
+| 断言信号新鲜度 | `stale=true` 就红；ETF 行情缺失 > 2 只也红 |
+| 写运行摘要 | 每天在 Actions 页面列出信号日、动作、调仓日、投入金额 |
+
+**不要只看任务是不是绿的** —— 打开 Pages 页面看一眼信号日期，那才是真相。
 
 ---
 
