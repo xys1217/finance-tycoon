@@ -74,6 +74,27 @@ def main():
             n = body.count(bad)
             step(f"页面无 '{bad}'", n == 0, f"{n} 次" if n else "")
 
+        # ★ 内容正确性断言 —— 只检查「有内容」是不够的。
+        #
+        # 2026-09-04 的教训：J() 里用了 r.text()，而静态版 fetch 劫持层
+        # 只实现了 json()，于是 #sigBox 显示「信号加载失败」，但其它模块
+        # 照常渲染 —— 字符数够、也没未捕获的 JS 错误，「有内容 / 无错误」
+        # 的检查全过，唯独当日信号是空的。所以必须断言信号区真的显示了
+        # 今天的 sig_date，而且没在报错。
+        sig_txt = ""
+        for sel in ["#sigBox", "#quantBox"]:
+            if pg.query_selector(sel):
+                sig_txt += pg.inner_text(sel) or ""
+        broke = [k for k in ["失败", "错误", "Error", "TypeError"] if k in sig_txt]
+        step("信号区没在报错", not broke, sig_txt[:70] if broke else "")
+
+        want = pg.evaluate("() => (window.__SIGNAL__ && window.__SIGNAL__.sig_date) || ''")
+        if want:
+            step(f"信号区显示当日 sig_date {want}", want in body,
+                 "页面里找不到该日期" if want not in body else "")
+        else:
+            step("页面内嵌了 __SIGNAL__", False, "window.__SIGNAL__ 为空")
+
         # 离线版 fetch 本地 API 必然失败，这类错误不算 bug
         real = [e for e in errors
                 if "favicon" not in e.lower()

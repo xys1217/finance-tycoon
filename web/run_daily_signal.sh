@@ -9,11 +9,16 @@
 #       早上 8:30 跑，K 线最后一根必然是昨天 → 口径正确。
 set -uo pipefail
 
-WEB=/workspace/web
-LOG=/workspace/logs
+# 路径不写死：脚本放在仓库 web/ 下，就能在任何机器上跑
+# （沙箱里是 /workspace/web，GitHub Actions 里是 ~/work/xxx/xxx/web，
+#  自己的服务器又是另一个路径）。写死 /workspace 换台机器就全废。
+WEB="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$WEB/.." && pwd)"
+LOG="$ROOT/logs"
 mkdir -p "$LOG"
 TS=$(date '+%Y-%m-%d %H:%M:%S')
 STAMP=$(date '+%Y-%m-%d')
+echo "  工作目录 $WEB"
 
 echo "────────────────────────────────────────────"
 echo "[$TS] 开始生成当日信号"

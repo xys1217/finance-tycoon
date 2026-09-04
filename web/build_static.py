@@ -83,7 +83,16 @@ window.fetch = async (url, opt) => {{
              {{ error: "离线快照里没有 " + (c || "该股") + " 的分析。在线模式（server.py）可分析任意个股。" }};
     }}
     else throw e;
-    return {{ ok: true, status: 200, json: async () => data || {{}} }};
+    // 假 Response 必须**同时**提供 json() 和 text()。
+    // 只给 json() 时，前端 J() 里的 `await r.text()` 会抛
+    // "r.text is not a function"，信号卡片直接显示「加载失败」——
+    // 而页面其它部分照常渲染，于是「有内容、无 JS 错误」的检查全过，
+    // 唯独当日信号是空的。2026-09-04 加 text() 才补上。
+    return {{
+      ok: true, status: 200,
+      json: async () => data || {{}},
+      text: async () => JSON.stringify(data || {{}})
+    }};
   }}
 }};
 </script>

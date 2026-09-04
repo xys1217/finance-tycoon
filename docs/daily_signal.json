@@ -1,0 +1,567 @@
+{
+ "rebalance": {
+  "sig_date": "2026-09-04",
+  "stocks_rebalance_day": false,
+  "etf_rebalance_day": false,
+  "next_stock_rebalance": "2026-10-08",
+  "next_etf_rebalance": "2026-10-08"
+ },
+ "changes": {
+  "is_stock_rebalance_day": false,
+  "is_etf_rebalance_day": false,
+  "next_stock_rebalance": "2026-10-08",
+  "next_etf_rebalance": "2026-10-08",
+  "add": [
+   "300408",
+   "301526",
+   "600176",
+   "601138"
+  ],
+  "remove": [
+   "600016",
+   "601166",
+   "601288"
+  ],
+  "keep": [
+   "601899"
+  ],
+  "action": "维持上期持仓，不换股"
+ },
+ "data_freshness": {
+  "bar_date": "2026-09-03",
+  "expected_bar_date": "2026-09-03",
+  "stale": false,
+  "bars_behind": 0
+ },
+ "positions": {
+  "601288": {
+   "name": "农业银行",
+   "leg": "防御仓",
+   "lots": 0,
+   "cost": null,
+   "entry_date": "2026-09-02",
+   "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"
+  },
+  "600016": {
+   "name": "民生银行",
+   "leg": "防御仓",
+   "lots": 0,
+   "cost": null,
+   "entry_date": "2026-09-02",
+   "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"
+  },
+  "601166": {
+   "name": "兴业银行",
+   "leg": "防御仓",
+   "lots": 0,
+   "cost": null,
+   "entry_date": "2026-09-02",
+   "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"
+  },
+  "601899": {
+   "name": "紫金矿业",
+   "cost": 33.35,
+   "lots": 3
+  }
+ },
+ "stop_loss_scan": [
+  {
+   "code": "601899",
+   "name": "紫金矿业",
+   "leg": "",
+   "cost": 33.35,
+   "price": 33.31,
+   "lots": 3,
+   "pnl_pct": -0.12,
+   "hit_stop": false
+  }
+ ],
+ "sig_date": "2026-09-04",
+ "bar_date": "2026-09-03",
+ "generated_at": "2026-09-04 08:54:05",
+ "capital": 200000.0,
+ "config": {
+  "defense": "4 只 × 6.5% = 26.0%",
+  "hot": "1 只 × 4.0% = 4.0%",
+  "etf": "12 只合计 57.99999999999999%",
+  "max_price": 120.0,
+  "stop_loss": -0.25,
+  "pool": "591 只（沪深300 + 中证500，已过滤）"
+ },
+ "picks": [
+  {
+   "leg": "防御仓",
+   "code": "601899",
+   "name": "紫金矿业",
+   "score": 1.132,
+   "price": 33.31,
+   "shares": 300,
+   "lots": 3,
+   "amount": 10002.99,
+   "fee": 5.0,
+   "cost": 10007.99,
+   "budget": 13000.0,
+   "px": 33.3433,
+   "weight_actual": 5.0,
+   "why": "修正六因子 +1.132",
+   "detail": {
+    "z_bp": -0.759,
+    "z_size": 2.24,
+    "z_mom": 1.497,
+    "z_rev": 0.113,
+    "z_vol": -0.611,
+    "z_liq": 4.312
+   }
+  },
+  {
+   "leg": "防御仓",
+   "code": "600176",
+   "name": "中国巨石",
+   "score": 0.927,
+   "price": 42.63,
+   "shares": 300,
+   "lots": 3,
+   "amount": 12801.79,
+   "fee": 5.0,
+   "cost": 12806.79,
+   "budget": 13000.0,
+   "px": 42.6726,
+   "weight_actual": 6.4,
+   "why": "修正六因子 +0.927",
+   "detail": {
+    "z_bp": -0.791,
+    "z_size": 0.39,
+    "z_mom": 5.175,
+    "z_rev": -1.151,
+    "z_vol": -3.18,
+    "z_liq": 5.121
+   }
+  },
+  {
+   "leg": "防御仓",
+   "code": "300408",
+   "name": "三环集团",
+   "score": 0.92,
+   "price": 110.91,
+   "shares": 100,
+   "lots": 1,
+   "amount": 11102.09,
+   "fee": 5.0,
+   "cost": 11107.09,
+   "budget": 13000.0,
+   "px": 111.0209,
+   "weight_actual": 5.55,
+   "why": "修正六因子 +0.920",
+   "detail": {
+    "z_bp": -0.931,
+    "z_size": 0.683,
+    "z_mom": 4.035,
+    "z_rev": 1.74,
+    "z_vol": -3.164,
+    "z_liq": 3.156
+   }
+  },
+  {
+   "leg": "防御仓",
+   "code": "601138",
+   "name": "工业富联",
+   "score": 0.873,
+   "price": 63.2,
+   "shares": 200,
+   "lots": 2,
+   "amount": 12652.64,
+   "fee": 5.0,
+   "cost": 12657.64,
+   "budget": 13000.0,
+   "px": 63.2632,
+   "weight_actual": 6.33,
+   "why": "修正六因子 +0.873",
+   "detail": {
+    "z_bp": -0.873,
+    "z_size": 2.631,
+    "z_mom": 0.765,
+    "z_rev": 0.511,
+    "z_vol": -1.362,
+    "z_liq": 3.566
+   }
+  },
+  {
+   "leg": "热点仓",
+   "code": "301526",
+   "name": "国际复材",
+   "score": 345.64,
+   "price": 27.32,
+   "shares": 200,
+   "lots": 2,
+   "amount": 5469.46,
+   "fee": 5.0,
+   "cost": 5474.46,
+   "budget": 8000.0,
+   "px": 27.3473,
+   "weight_actual": 2.74,
+   "why": "12-1 动量 +345.6%，三道闸门全过",
+   "detail": {
+    "r20": -22.39,
+    "pct_from_high": 50.5,
+    "cmf20": -0.051
+   }
+  }
+ ],
+ "etfs": [
+  {
+   "leg": "ETF腿",
+   "code": "512040",
+   "name": "价值ETF富国",
+   "sector": "宽基价值",
+   "price": 1.218,
+   "shares": 7900,
+   "lots": 79,
+   "amount": 9631.82,
+   "fee": 5.0,
+   "cost": 9636.82,
+   "budget": 9666.67,
+   "px": 1.2192,
+   "weight_actual": 4.82
+  },
+  {
+   "leg": "ETF腿",
+   "code": "512890",
+   "name": "红利低波ETF华泰柏瑞",
+   "sector": "红利",
+   "price": 1.2,
+   "shares": 8000,
+   "lots": 80,
+   "amount": 9609.6,
+   "fee": 5.0,
+   "cost": 9614.6,
+   "budget": 9666.67,
+   "px": 1.2012,
+   "weight_actual": 4.81
+  },
+  {
+   "leg": "ETF腿",
+   "code": "510880",
+   "name": "红利ETF华泰柏瑞",
+   "sector": "红利",
+   "price": 3.436,
+   "shares": 2800,
+   "lots": 28,
+   "amount": 9630.42,
+   "fee": 5.0,
+   "cost": 9635.42,
+   "budget": 9666.67,
+   "px": 3.4394,
+   "weight_actual": 4.82
+  },
+  {
+   "leg": "ETF腿",
+   "code": "512530",
+   "name": "沪深300红利ETF建信",
+   "sector": "红利",
+   "price": 1.66,
+   "shares": 5800,
+   "lots": 58,
+   "amount": 9637.63,
+   "fee": 5.0,
+   "cost": 9642.63,
+   "budget": 9666.67,
+   "px": 1.6617,
+   "weight_actual": 4.82
+  },
+  {
+   "leg": "ETF腿",
+   "code": "510030",
+   "name": "价值ETF华宝",
+   "sector": "宽基价值",
+   "price": 1.089,
+   "shares": 8800,
+   "lots": 88,
+   "amount": 9592.78,
+   "fee": 5.0,
+   "cost": 9597.78,
+   "budget": 9666.67,
+   "px": 1.0901,
+   "weight_actual": 4.8
+  },
+  {
+   "leg": "ETF腿",
+   "code": "512390",
+   "name": "中国低波ETF平安",
+   "sector": "宽基价值",
+   "price": 1.227,
+   "shares": 7800,
+   "lots": 78,
+   "amount": 9580.17,
+   "fee": 5.0,
+   "cost": 9585.17,
+   "budget": 9666.67,
+   "px": 1.2282,
+   "weight_actual": 4.79
+  },
+  {
+   "leg": "ETF腿",
+   "code": "512750",
+   "name": "基本面50ETF嘉实",
+   "sector": "宽基价值",
+   "price": 1.461,
+   "shares": 6600,
+   "lots": 66,
+   "amount": 9652.24,
+   "fee": 5.0,
+   "cost": 9657.24,
+   "budget": 9666.67,
+   "px": 1.4625,
+   "weight_actual": 4.83
+  },
+  {
+   "leg": "ETF腿",
+   "code": "510010",
+   "name": "180治理ETF交银",
+   "sector": "宽基价值",
+   "price": 1.784,
+   "shares": 5400,
+   "lots": 54,
+   "amount": 9643.23,
+   "fee": 5.0,
+   "cost": 9648.23,
+   "budget": 9666.67,
+   "px": 1.7858,
+   "weight_actual": 4.82
+  },
+  {
+   "leg": "ETF腿",
+   "code": "511260",
+   "name": "十年国债ETF国泰",
+   "sector": "国债",
+   "price": 135.861,
+   "shares": 100,
+   "amount": 13599.69,
+   "fee": 5.0,
+   "cost": 13604.69,
+   "budget": 9666.67,
+   "px": 135.9969,
+   "weight_actual": 6.8,
+   "lots": 1,
+   "note": "剩余现金补位 1 手（目标权重买不满最小单位）"
+  },
+  {
+   "leg": "ETF腿",
+   "code": "511020",
+   "name": "国债ETF平安",
+   "sector": "国债",
+   "price": 118.231,
+   "shares": 100,
+   "amount": 11834.92,
+   "fee": 5.0,
+   "cost": 11839.92,
+   "budget": 9666.67,
+   "px": 118.3492,
+   "weight_actual": 5.92,
+   "lots": 1,
+   "note": "剩余现金补位 1 手（目标权重买不满最小单位）"
+  },
+  {
+   "leg": "ETF腿",
+   "code": "159934",
+   "name": "黄金ETF易方达",
+   "sector": "黄金",
+   "price": 9.51,
+   "shares": 1000,
+   "lots": 10,
+   "amount": 9519.51,
+   "fee": 5.0,
+   "cost": 9524.51,
+   "budget": 9666.67,
+   "px": 9.5195,
+   "weight_actual": 4.76
+  },
+  {
+   "leg": "ETF腿",
+   "code": "518880",
+   "name": "黄金ETF华安",
+   "sector": "黄金",
+   "price": 9.105,
+   "shares": 1000,
+   "lots": 10,
+   "amount": 9114.1,
+   "fee": 5.0,
+   "cost": 9119.1,
+   "budget": 9666.67,
+   "px": 9.1141,
+   "weight_actual": 4.56
+  }
+ ],
+ "hot_gates": [
+  {
+   "name": "近20日涨幅 ≤ +15%",
+   "value": -22.386,
+   "pass": true
+  },
+  {
+   "name": "现价 ≤ 52周高点的 95%",
+   "value": 50.518,
+   "pass": true
+  },
+  {
+   "name": "资金流 CMF(20) ≥ −0.15",
+   "value": -0.051,
+   "pass": true
+  }
+ ],
+ "summary": {
+  "n_pick": 5,
+  "n_etf": 12,
+  "invested": 173160.08,
+  "invested_pct": 86.58,
+  "cash": 26839.92,
+  "cash_pct": 13.42
+ },
+ "defense_ranking": [
+  {
+   "code": "601899",
+   "name": "紫金矿业",
+   "score": 1.132,
+   "price": 33.31
+  },
+  {
+   "code": "600176",
+   "name": "中国巨石",
+   "score": 0.927,
+   "price": 42.63
+  },
+  {
+   "code": "300408",
+   "name": "三环集团",
+   "score": 0.92,
+   "price": 110.91
+  },
+  {
+   "code": "601138",
+   "name": "工业富联",
+   "score": 0.873,
+   "price": 63.2
+  },
+  {
+   "code": "601398",
+   "name": "工商银行",
+   "score": 0.838,
+   "price": 8.1
+  },
+  {
+   "code": "600015",
+   "name": "华夏银行",
+   "score": 0.788,
+   "price": 6.27
+  },
+  {
+   "code": "601668",
+   "name": "中国建筑",
+   "score": 0.772,
+   "price": 4.37
+  },
+  {
+   "code": "600016",
+   "name": "民生银行",
+   "score": 0.765,
+   "price": 3.59
+  },
+  {
+   "code": "601166",
+   "name": "兴业银行",
+   "score": 0.761,
+   "price": 17.93
+  },
+  {
+   "code": "000725",
+   "name": "京东方Ａ",
+   "score": 0.759,
+   "price": 5.71
+  },
+  {
+   "code": "601288",
+   "name": "农业银行",
+   "score": 0.726,
+   "price": 6.89
+  },
+  {
+   "code": "603993",
+   "name": "洛阳钼业",
+   "score": 0.702,
+   "price": 18.61
+  }
+ ],
+ "hot_ranking": [
+  {
+   "code": "301526",
+   "name": "国际复材",
+   "mom": 345.64,
+   "gates_ok": true
+  },
+  {
+   "code": "600105",
+   "name": "永鼎股份",
+   "mom": 309.67,
+   "gates_ok": true
+  },
+  {
+   "code": "600176",
+   "name": "中国巨石",
+   "mom": 221.94,
+   "gates_ok": true
+  },
+  {
+   "code": "601872",
+   "name": "招商轮船",
+   "mom": 214.5,
+   "gates_ok": true
+  },
+  {
+   "code": "300285",
+   "name": "国瓷材料",
+   "mom": 210.08,
+   "gates_ok": true
+  },
+  {
+   "code": "000657",
+   "name": "中钨高新",
+   "mom": 209.4,
+   "gates_ok": true
+  },
+  {
+   "code": "000703",
+   "name": "恒逸石化",
+   "mom": 188.34,
+   "gates_ok": true
+  },
+  {
+   "code": "300390",
+   "name": "天华新能",
+   "mom": 186.07,
+   "gates_ok": false
+  },
+  {
+   "code": "002008",
+   "name": "大族激光",
+   "mom": 180.18,
+   "gates_ok": true
+  },
+  {
+   "code": "300408",
+   "name": "三环集团",
+   "mom": 174.51,
+   "gates_ok": true
+  },
+  {
+   "code": "002407",
+   "name": "多氟多",
+   "mom": 157.23,
+   "gates_ok": true
+  },
+  {
+   "code": "001203",
+   "name": "大中矿业",
+   "mom": 125.19,
+   "gates_ok": true
+  }
+ ]
+}

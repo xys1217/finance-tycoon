@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>最强量化大佬 · A股量化投资系统</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:#0b0e13;color:#e8eaed;line-height:1.6}
+
+/* ── 顶部大标题 ── */
+.hero{padding:52px 20px 30px;text-align:center;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(900px 320px at 50% 0%,rgba(26,115,232,.16),transparent 70%)}
+.hero h1{position:relative;font-size:clamp(38px,7vw,72px);font-weight:900;letter-spacing:6px;
+  background:linear-gradient(100deg,#ffd54f 0%,#ff9800 26%,#42a5f5 62%,#ab47bc 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 18px rgba(255,152,0,.22))}
+.hero .tag{position:relative;margin-top:12px;font-size:14px;color:#8b9199;letter-spacing:1px}
+.hero .tag b{color:#cfd4da;font-weight:600}
+.hero .rule{position:relative;margin:16px auto 0;max-width:760px;font-size:12.5px;color:#6b7280;
+  border-top:1px solid #1d222a;padding-top:12px;line-height:1.8}
+
+/* ── 模块导航 ── */
+.tabs{position:sticky;top:0;z-index:50;background:rgba(11,14,19,.94);
+  backdrop-filter:blur(10px);border-bottom:1px solid #1d222a;
+  display:flex;gap:6px;padding:0 20px;overflow-x:auto}
+.tab{padding:14px 20px;font-size:14.5px;color:#8b9199;cursor:pointer;white-space:nowrap;
+  border-bottom:2px solid transparent;transition:all .16s;display:flex;align-items:center;gap:7px}
+.tab:hover{color:#e8eaed;background:rgba(255,255,255,.03)}
+.tab.on{color:#fff;border-bottom-color:#ff9800}
+.tab .n{font-size:11px;background:#1e232b;color:#8b9199;padding:1px 7px;border-radius:8px}
+.tab.on .n{background:rgba(255,152,0,.18);color:#ffb74d}
+
+/* ── 模块容器 ── */
+.mod{display:none;padding:26px 20px 60px;max-width:1240px;margin:0 auto}
+.mod.on{display:block}
+.mhd{font-size:20px;margin-bottom:6px;color:#fff;display:flex;align-items:center;gap:9px}
+.mhd::before{content:"";width:3px;height:19px;background:#ff9800;border-radius:2px}
+.msub{font-size:13px;color:#8b9199;margin-bottom:20px;line-height:1.75}
+
+.panel{background:#141920;border:1px solid #222831;border-radius:13px;padding:18px;margin-bottom:18px}
+.panel h3{font-size:15px;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.panel h3::before{content:"";width:3px;height:14px;background:#1a73e8;border-radius:2px}
+
+/* 通用组件 */
+.kpis{display:flex;gap:11px;flex-wrap:wrap;margin-bottom:14px}
+.kpi{flex:1;min-width:132px;background:#1a1f27;border-radius:10px;padding:12px 14px}
+.kpi label{display:block;color:#8b9199;font-size:12px;margin-bottom:3px}
+.kpi b{font-size:21px;color:#fff}
+.g{color:#4caf50!important}.r{color:#ef5350!important}.b{color:#42a5f5!important}.y{color:#ffb74d!important}
+
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:#1a1f27;color:#8b9199;text-align:left;padding:9px 10px;font-weight:500;
+  position:sticky;top:0}
+.tbl td{padding:9px 10px;border-top:1px solid #222831}
+.tbl tr:hover td{background:rgba(255,255,255,.022)}
+.scroll{max-height:440px;overflow:auto;border-radius:8px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(258px,1fr));gap:11px}
+.card{background:#1a1f27;border:1px solid #262d36;border-radius:11px;padding:13px 14px;
+  border-left:3px solid #3a4048}
+.card.ok{border-left-color:#4caf50}.card.warn{border-left-color:#ff9800}
+.card.bad{border-left-color:#ef5350}
+.c-hd{display:flex;align-items:center;gap:7px;margin-bottom:7px}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.card.ok .dot{background:#4caf50;box-shadow:0 0 6px #4caf50}
+.card.warn .dot{background:#ff9800}.card.bad .dot{background:#ef5350}
+.c-hd b{font-size:13.5px;color:#fff}
+.c-meta{display:flex;gap:8px;font-size:11px;color:#8b9199;flex-wrap:wrap}
+.c-meta span{background:#141920;padding:2px 7px;border-radius:6px}
+.c-err{font-size:11.5px;color:#e57373;background:rgba(229,57,53,.08);padding:6px 8px;
+  border-radius:6px;margin-top:7px;word-break:break-all;line-height:1.45}
+.c-top{font-size:11px;color:#8b9199;margin-top:7px}
+.c-top code{background:#141920;padding:1px 5px;border-radius:4px;color:#64b5f6;
+  font-family:ui-monospace,Menlo,monospace;margin-right:3px}
+
+/* ── 模块1：当日信号 ── */
+.sigHd{display:flex;gap:11px;flex-wrap:wrap;background:#141920;border:1px solid #222831;
+  border-radius:13px;padding:15px 16px;margin-bottom:18px}
+.sigHd>div{flex:1;min-width:118px}
+.sigHd label{display:block;color:#8b9199;font-size:12px;margin-bottom:3px}
+.sigHd b{font-size:19px;color:#fff;font-weight:600}
+.sigAge{font-size:11.5px;color:#8b9199;font-weight:400;margin-left:6px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.two{grid-template-columns:1fr}}
+
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;margin:1px 3px 1px 0}
+.t-em{background:rgba(26,115,232,.18);color:#64b5f6}
+.t-news{background:rgba(255,152,0,.18);color:#ffb74d}
+.t-page{background:rgba(233,30,99,.16);color:#f06292}
+.t-xq{background:rgba(76,175,80,.16);color:#81c784}
+.t-hot{background:rgba(255,152,0,.18);color:#ffb74d}
+
+.alert{background:rgba(229,57,53,.09);border-left:3px solid #ef5350;padding:13px 16px;
+  border-radius:0 9px 9px 0;font-size:13.5px;color:#ef9a9a;margin-bottom:18px;line-height:1.75}
+.alert b{color:#ff8a80}
+.note{background:rgba(255,152,0,.09);border-left:3px solid #ff9800;padding:12px 15px;
+  border-radius:0 9px 9px 0;font-size:13px;color:#ffcc80;margin-top:14px;line-height:1.75}
+.empty{background:#1a1f27;border:1px dashed #3a4048;border-radius:10px;padding:18px;
+  color:#8b9199;font-size:13px;text-align:center}
+code{font-family:ui-monospace,Menlo,monospace;font-size:12px}
+.up{color:#ef5350!important}.down{color:#4caf50!important}
+
+/* 个股分析输入 */
+.search{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.search input{flex:1;min-width:200px;background:#1a1f27;border:1px solid #2a3038;
+  border-radius:9px;padding:11px 14px;color:#e8eaed;font-size:14.5px;font-family:inherit;outline:none}
+.search input:focus{border-color:#1a73e8}
+.search button{background:linear-gradient(100deg,#1a73e8,#42a5f5);border:0;color:#fff;
+  font-size:14px;padding:11px 26px;border-radius:9px;cursor:pointer;font-family:inherit;font-weight:600}
+.search button:disabled{opacity:.5;cursor:wait}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.chip{font-size:12px;background:#1a1f27;border:1px solid #2a3038;color:#9aa0a6;
+  padding:4px 11px;border-radius:14px;cursor:pointer}
+.chip:hover{border-color:#1a73e8;color:#cfd4da}
+
+/* 闸门 */
+.gate{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#1a1f27;
+  border-radius:8px;margin-bottom:7px;font-size:13px}
+.gate .ico{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:12px;flex-shrink:0}
+.gate.pass .ico{background:rgba(76,175,80,.2);color:#81c784}
+.gate.fail .ico{background:rgba(229,57,53,.2);color:#e57373}
+.gate .nm{flex:1;color:#cfd4da}
+.gate .vl{color:#fff;font-weight:600}
+.gate .lim{color:#6b7280;font-size:11.5px}
+
+.verdict{padding:16px 20px;border-radius:11px;margin-bottom:16px;font-size:17px;font-weight:700;
+  display:flex;align-items:center;gap:11px}
+.v-green{background:rgba(76,175,80,.13);border:1px solid rgba(76,175,80,.35);color:#81c784}
+.v-amber{background:rgba(255,152,0,.13);border:1px solid rgba(255,152,0,.35);color:#ffb74d}
+.v-red{background:rgba(229,57,53,.13);border:1px solid rgba(229,57,53,.35);color:#e57373}
+.v-green .s,.v-amber .s,.v-red .s{margin-left:auto;font-size:13px;font-weight:500;opacity:.85}
+
+.reasons{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+@media(max-width:760px){.reasons{grid-template-columns:1fr}}
+.rbox{background:#1a1f27;border-radius:9px;padding:12px 14px;font-size:13px}
+.rbox h4{font-size:12.5px;margin-bottom:7px;color:#8b9199;font-weight:500}
+.rbox li{list-style:none;padding:4px 0 4px 15px;position:relative;color:#cfd4da;line-height:1.6}
+.rbox li::before{content:"·";position:absolute;left:4px;color:#ff9800;font-weight:700}
+.rbox.neg li::before{content:"·";color:#ef5350}
+
+.foot{text-align:center;color:#5f6672;font-size:12px;padding:26px 20px 40px;line-height:1.9}
+
+/* ── 模块5 模拟盘 ── */
+.pform{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.pform label{font-size:12px;color:#8b9199;display:flex;align-items:center;gap:5px}
+.pform input,.pform select{background:#1a1f27;border:1px solid #2a3038;color:#e8eaed;
+  border-radius:8px;padding:8px 10px;font-size:13px;outline:none}
+.pform input:focus,.pform select:focus{border-color:#1a73e8}
+.pform input[type=number]{width:130px}
+.btn{border:0;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;color:#fff;
+  background:linear-gradient(100deg,#1a73e8,#42a5f5)}
+.btn:hover{filter:brightness(1.1)}
+.btn.red{background:linear-gradient(100deg,#e53935,#ef5350)}
+.btn.ghost{background:#232a33;border:1px solid #333b45}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn-xs{padding:3px 9px;font-size:11.5px;border-radius:6px}
+.qbox{background:#1a1f27;border:1px solid #262d36;border-radius:10px;padding:13px 15px;margin-top:12px}
+.qbox.bad{border-left:3px solid #ef5350}
+.qhead{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:9px}
+.qhead .nm{font-size:16px;color:#fff;font-weight:600}
+.qhead .px{font-size:22px;font-weight:700}
+.qmeta{display:flex;gap:7px;flex-wrap:wrap;font-size:11.5px;color:#8b9199}
+.qmeta span{background:#141920;padding:3px 8px;border-radius:6px}
+.qerr{color:#ef5350;font-size:12.5px;margin-top:9px;line-height:1.6}
+.seg{display:inline-flex;background:#141920;border-radius:7px;padding:2px}
+.seg button{background:transparent;border:0;color:#8b9199;padding:6px 12px;font-size:12px;
+  cursor:pointer;border-radius:5px}
+.seg button.on{background:#1a73e8;color:#fff}
+.chart{width:100%;height:220px;background:#141920;border-radius:9px;overflow:hidden}
+.pnote{font-size:12px;color:#8b9199;margin-top:9px;line-height:1.7}
+.bar{height:26px;background:#1a1f27;border-radius:6px;position:relative;overflow:hidden;margin:7px 0}
+.bar i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;display:block}
+.bar span{position:absolute;right:10px;top:4px;font-size:12px;color:#e8eaed}
+</style>
+</head>
+<body>
+<!--DATA-INJECT-START-->
+<script>
+/* 内嵌数据快照：必须早于下方主脚本执行 */
+window.__SENTIMENT__ = {"ts": "2026-09-04 08:58:27", "meta": {"universe": 5207, "sources": 14}, "status": {"em_comment": {"ok": true, "rows": 5196, "ms": 3080, "error": null, "label": "东方财富·股吧关注度", "covered": 5196}, "em_hot_rank": {"ok": true, "rows": 98, "ms": 102, "error": null, "label": "东方财富·人气榜", "covered": 98}, "em_notice": {"ok": true, "rows": 369, "ms": 1707, "error": null, "label": "东方财富·公告热度(巨潮生态)", "covered": 369}, "xq_follow": {"ok": true, "rows": 5635, "ms": 11646, "error": null, "label": "雪球·关注榜", "covered": 500}, "xq_tweet": {"ok": true, "rows": 5635, "ms": 11910, "error": null, "label": "雪球·讨论榜", "covered": 500}, "xq_deal": {"ok": true, "rows": 5635, "ms": 11934, "error": null, "label": "雪球·交易榜", "covered": 500}, "cls_news": {"ok": false, "rows": 0, "ms": 122, "error": "财联社电报正文走带签名 XHR（sign 参数），页面为 SPA 空壳，需签名算法或付费接口", "label": "财联社·电报提及", "covered": 0}, "em_news": {"ok": false, "rows": 0, "ms": 70000, "error": "超时 70s（源无响应）", "label": "东方财富·全球财经(消息面主力)", "covered": 0}, "ths_news": {"ok": false, "rows": 0, "ms": 70000, "error": "超时 70s（源无响应）", "label": "同花顺·要闻提及", "covered": 0}, "sina_news": {"ok": false, "rows": 0, "ms": 70000, "error": "超时 70s（源无响应）", "label": "新浪·全球财经", "covered": 0}, "jin10": {"ok": true, "rows": 0, "ms": 213, "error": "快讯已通，但本批无A股代码提及", "label": "金十数据·快讯", "covered": 0}, "gelonghui": {"ok": true, "rows": 9, "ms": 251, "error": null, "label": "格隆汇·页面热点", "covered": 9}, "taoguba": {"ok": true, "rows": 5, "ms": 404, "error": null, "label": "淘股吧·页面热点", "covered": 5}, "jiuyangongshe": {"ok": false, "rows": 0, "ms": 164, "error": "RuntimeError: HTTP 403", "label": "韭研公社·页面热点", "covered": 0}}, "top": {"em_comment": {"002837": 0.9969842797561759, "600309": 0.9955085017645171, "601318": 0.9942893808148862, "600693": 0.9939685595123516, "601086": 0.9925248636509464, "002155": 0.9921077959576516, "002396": 0.9917228103946102, "600519": 0.9915303176130895}, "em_hot_rank": {"002328": 1.0, "600703": 0.99, "601212": 0.98, "600172": 0.97, "002909": 0.96, "600869": 0.95, "002297": 0.94, "603270": 0.93}, "em_notice": {"000973": 1.0, "603162": 0.997289972899729, "600584": 0.994579945799458, "600133": 0.991869918699187, "001393": 0.989159891598916, "301567": 0.986449864498645, "002782": 0.983739837398374, "603138": 0.981029810298103}, "xq_follow": {"600519": 1.0, "601318": 0.998, "600036": 0.996, "000651": 0.994, "002594": 0.992, "000002": 0.99, "600887": 0.988, "000858": 0.986}, "xq_tweet": {"600519": 1.0, "002594": 0.998, "601127": 0.996, "688256": 0.994, "300308": 0.992, "300476": 0.99, "000651": 0.988, "600021": 0.986}, "xq_deal": {"600519": 1.0, "601318": 0.998, "600036": 0.996, "600887": 0.994, "601919": 0.992, "002594": 0.99, "300308": 0.988, "688256": 0.986}, "cls_news": {}, "em_news": {}, "ths_news": {}, "sina_news": {}, "jin10": {}, "gelonghui": {"605506": 1.0, "000734": 0.8888888888888888, "300174": 0.7777777777777778, "002049": 0.6666666666666666, "603221": 0.5555555555555556, "000017": 0.4444444444444444, "002418": 0.3333333333333333, "002837": 0.2222222222222222}, "taoguba": {"601086": 1.0, "002536": 0.8, "600127": 0.6, "600172": 0.4, "003018": 0.2}, "jiuyangongshe": {}}, "merged": [{"code": "600584", "score": 0.7357894177658492, "nsrc": 6, "srcs": ["股吧", "人气榜", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600703", "score": 0.7235852189192409, "nsrc": 6, "srcs": ["股吧", "人气榜", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002536", "score": 0.6506469000750322, "nsrc": 6, "srcs": ["股吧", "人气榜", "公告", "雪球讨论", "雪球交易", "淘股吧"]}, {"code": "002837", "score": 0.6432010836630663, "nsrc": 6, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易", "格隆汇"]}, {"code": "002460", "score": 0.8589844331244082, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "603986", "score": 0.8385513024562391, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "603259", "score": 0.8321905480306006, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "300059", "score": 0.8292107795957652, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600519", "score": 0.8283060635226178, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002714", "score": 0.8221869694385106, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601088", "score": 0.812179824774186, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002352", "score": 0.8031764511947334, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600585", "score": 0.7674517878614783, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "300308", "score": 0.7666725697786333, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601012", "score": 0.7653314887412589, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601688", "score": 0.7586220584207767, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601138", "score": 0.7518996470965672, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "300450", "score": 0.747173357747052, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "603778", "score": 0.7102135574387505, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "000001", "score": 0.6987780130467329, "nsrc": 5, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易", "格隆汇"]}, {"code": "600547", "score": 0.6761482444814824, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600487", "score": 0.670111645813282, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002407", "score": 0.6691129932627526, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002049", "score": 0.6517282450553091, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "格隆汇"]}, {"code": "603538", "score": 0.6489517260446906, "nsrc": 5, "srcs": ["股吧", "人气榜", "公告", "雪球讨论", "雪球交易"]}, {"code": "600031", "score": 0.6238088823159645, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "603288", "score": 0.6194547258542846, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601985", "score": 0.6166212540200474, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "603893", "score": 0.6007464536204553, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600028", "score": 0.5878213687853914, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002241", "score": 0.582235326337864, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600079", "score": 0.5572787916252598, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600895", "score": 0.547426337081465, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002353", "score": 0.5454796111541482, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002639", "score": 0.54292909849214, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002155", "score": 0.5412215591915303, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002821", "score": 0.5382112016192346, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600410", "score": 0.516698265739154, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002104", "score": 0.499646711581649, "nsrc": 5, "srcs": ["股吧", "人气榜", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002261", "score": 0.4751636026928123, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "603605", "score": 0.38712553502820884, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601066", "score": 0.30288890766867244, "nsrc": 5, "srcs": ["股吧", "公告", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600036", "score": 0.9885537375681746, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601318", "score": 0.9830723452037216, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "000651", "score": 0.9803031761308951, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600887", "score": 0.9676940968880334, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "300750", "score": 0.9635471607314725, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002594", "score": 0.9627975617581008, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601899", "score": 0.9574260506897658, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "000333", "score": 0.9565198909207572, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601888", "score": 0.9453110362528072, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600030", "score": 0.9450304780237408, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "600900", "score": 0.9430237407763876, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601919", "score": 0.9235959255694578, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002415", "score": 0.9231669874879692, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "300274", "score": 0.9216985883862688, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "601086", "score": 0.9193981535821133, "nsrc": 4, "srcs": ["股吧", "人气榜", "公告", "淘股吧"]}, {"code": "300760", "score": 0.9172362848893167, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "000725", "score": 0.9151466153352583, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}, {"code": "002475", "score": 0.9036188642925891, "nsrc": 4, "srcs": ["股吧", "雪球关注", "雪球讨论", "雪球交易"]}]};
+window.__MAINFUND__  = {"ts": "2026-09-04 08:54:19", "fund": {"ok": false, "rows": 0, "ms": 8554, "error": "ValueError: Length mismatch: Expected axis has 13 elements, new values have 10 elements", "top_in": [], "top_out": []}, "sector": {"ok": false, "industry": [], "concept": [], "ms": 700, "error": "行业: AttributeError: 'NoneType' object has no attribute 'text' | 概念: ValueError: Length mismatch: Expected axis has 12 elements, new values have 11 elements"}, "lhb": {"ok": true, "ms": 5567, "error": null, "n": 8093, "buy": {"n": 4429, "上榜后1日": {"mean": 0.805, "win": 52.0, "n": 4272}, "上榜后2日": {"mean": 0.555, "win": 47.4, "n": 4226}, "上榜后5日": {"mean": -0.828, "win": 41.9, "n": 4072}, "上榜后10日": {"mean": -3.177, "win": 36.9, "n": 3837}}, "sell": {"n": 3567, "上榜后1日": {"mean": -1.229, "win": 39.4, "n": 3493}, "上榜后2日": {"mean": -2.112, "win": 36.1, "n": 3445}, "上榜后5日": {"mean": -3.655, "win": 34.3, "n": 3318}, "上榜后10日": {"mean": -5.558, "win": 32.6, "n": 3152}}, "verdict": "近 120 天 8093 条龙虎榜：机构净买入组上榜后 5 日平均 -0.83%，净卖出组 -3.65%，价差 +2.83pp。两组均值都为负 —— 龙虎榜本身就是异动股，追进去整体是亏的；跟随主力只能让你「少亏」，不能让你「赚钱」。正确用法是拿它做排除/确认，不是当买入信号。", "recent": [{"代码": "600584", "名称": "长电科技", "收盘价": 104.17, "涨跌幅": 10.0, "龙虎榜净买额": 4111744166.96, "净买额占总成交比": 11.386909696043, "上榜后1日": -3.14869924, "上榜后5日": -7.86214841, "解读": "买一主买，成功率45.73%"}, {"代码": "300308", "名称": "中际旭创", "收盘价": 908.0, "涨跌幅": -15.687, "龙虎榜净买额": 2838898384.3, "净买额占总成交比": 5.501723684219, "上榜后1日": 4.73568282, "上榜后5日": 12.55396476, "解读": "3家机构卖出，成功率40.86%"}, {"代码": "603986", "名称": "兆易创新", "收盘价": 775.21, "涨跌幅": 9.9448, "龙虎榜净买额": 2833195648.2, "净买额占总成交比": 3.614801853732, "上榜后1日": -0.67207595, "上榜后5日": -10.37138324, "解读": "买一主买，成功率49.40%"}, {"代码": "002384", "名称": "东山精密", "收盘价": 191.75, "涨跌幅": -9.9977, "龙虎榜净买额": 2606761020.44, "净买额占总成交比": 9.754196447341, "上榜后1日": 10.00260756, "上榜后5日": 11.0821382, "解读": "2家机构卖出，成功率49.28%"}, {"代码": "002851", "名称": "麦格米特", "收盘价": 178.9, "涨跌幅": 9.3253, "龙虎榜净买额": 2416929593.31, "净买额占总成交比": 12.915148735494, "上榜后1日": 0.3353829, "上榜后5日": -3.86808273, "解读": "3家机构买入，成功率45.27%"}, {"代码": "000977", "名称": "浪潮信息", "收盘价": 85.99, "涨跌幅": 10.0038, "龙虎榜净买额": 2353897989.43, "净买额占总成交比": 12.700620866872, "上榜后1日": 4.1051285, "上榜后5日": -1.15129666, "解读": "1家机构买入，成功率46.58%"}, {"代码": "000938", "名称": "紫光股份", "收盘价": 38.41, "涨跌幅": 7.6513, "龙虎榜净买额": 2248268672.33, "净买额占总成交比": 4.497895815167, "上榜后1日": -0.02603489, "上榜后5日": -8.53944285, "解读": "3家机构买入，成功率44.20%"}, {"代码": "600522", "名称": "中天科技", "收盘价": 40.9, "涨跌幅": 6.5659, "龙虎榜净买额": 2040058349.15, "净买额占总成交比": 6.542357962264, "上榜后1日": 7.23716381, "上榜后5日": 0.2200489, "解读": "买一主买，成功率52.44%"}, {"代码": "300620", "名称": "光库科技", "收盘价": 392.49, "涨跌幅": 14.4119, "龙虎榜净买额": 2010482225.0, "净买额占总成交比": 10.995775929725, "上榜后1日": 0.69046345, "上榜后5日": 3.44212591, "解读": "4家机构买入，成功率44.32%"}, {"代码": "600353", "名称": "旭光电子", "收盘价": 48.8, "涨跌幅": 5.6048, "龙虎榜净买额": 1937598826.15, "净买额占总成交比": 21.182109215306, "上榜后1日": 8.40163934, "上榜后5日": -6.55737705, "解读": "普通席位买入，成功率45.25%"}, {"代码": "300502", "名称": "新易盛", "收盘价": 406.9, "涨跌幅": -17.1283, "龙虎榜净买额": 1927535181.89, "净买额占总成交比": 5.766692006618, "上榜后1日": 3.514377, "上榜后5日": 10.10076186, "解读": "2家机构卖出，成功率40.07%"}, {"代码": "002185", "名称": "华天科技", "收盘价": 23.73, "涨跌幅": 10.0139, "龙虎榜净买额": 1872752194.79, "净买额占总成交比": 5.018198916132, "上榜后1日": 6.65823852, "上榜后5日": -12.34723978, "解读": "2家机构买入，成功率45.83%"}]}};
+window.__QUANT__     = { css: "#mod-quant, #mod-quant * {box-sizing:border-box;margin:0;padding:0}\n#mod-quant {font-family:-apple-system,\"PingFang SC\",\"Microsoft YaHei\",sans-serif;background:#0f1218;color:#e8eaed;padding:20px;line-height:1.6}\n#mod-quant .wrap {max-width:1180px;margin:0 auto}\n#mod-quant h1 {font-size:24px;margin-bottom:4px}\n#mod-quant .sub {color:#9aa0a6;font-size:13px;margin-bottom:18px}\n#mod-quant .panel {background:#171b22;border:1px solid #262b34;border-radius:12px;padding:18px;margin-bottom:18px}\n#mod-quant h2 {font-size:17px;margin-bottom:12px;color:#fff;display:flex;align-items:center;gap:8px}\n#mod-quant h2::before {content:\"\";width:3px;height:16px;background:#1a73e8;border-radius:2px}\n#mod-quant .bar {display:flex;gap:12px;flex-wrap:wrap;margin-bottom:14px}\n#mod-quant .kpi {flex:1;min-width:150px;background:#1e232b;border-radius:10px;padding:12px 14px}\n#mod-quant .kpi label {display:block;color:#9aa0a6;font-size:12px;margin-bottom:4px}\n#mod-quant .kpi b {font-size:20px;color:#fff}\n#mod-quant .kpi .g {color:#4caf50}\n#mod-quant .kpi .r {color:#ef5350}\n#mod-quant .kpi .b {color:#42a5f5}\n#mod-quant .gauge {height:10px;background:#2a2f38;border-radius:5px;overflow:hidden;display:flex;margin:10px 0 6px}\n#mod-quant .gauge i {display:block;height:100%}\n#mod-quant .gauge .used {background:linear-gradient(90deg,#1a73e8,#42a5f5)}\n#mod-quant .gauge .free {background:#3a4048}\n#mod-quant .legend {font-size:12px;color:#9aa0a6}\n#mod-quant .tbl {width:100%;border-collapse:collapse;font-size:13px}\n#mod-quant .tbl th {background:#1e232b;color:#9aa0a6;text-align:left;padding:9px 10px;font-weight:500}\n#mod-quant .tbl td {padding:9px 10px;border-top:1px solid #262b34}\n#mod-quant tr.sell {background:rgba(229,57,53,.10)}\n#mod-quant tr.half {background:rgba(255,167,38,.10)}\n#mod-quant .code {color:#9aa0a6;font-size:12px}\n#mod-quant .cards {display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px}\n#mod-quant .card {background:#1a1f27;border:1px solid #2a3038;border-radius:12px;padding:15px}\n#mod-quant .card.hot {border-left:3px solid #ff9800}\n#mod-quant .card.val {border-left:3px solid #1a73e8}\n#mod-quant .card.gold {border-left:3px solid #d4a017}\n#mod-quant .drv {font-size:11px;padding:3px 9px;border-radius:10px;margin-left:6px;vertical-align:middle}\n#mod-quant .dh {background:rgba(255,152,0,.20);color:#ffb74d}\n#mod-quant .dv {background:rgba(26,115,232,.20);color:#64b5f6}\n#mod-quant .dg {background:rgba(212,160,23,.22);color:#ffd54f}\n#mod-quant .card-hd {display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}\n#mod-quant .card-hd b {font-size:16px}\n#mod-quant .rank {display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;background:#1a73e8;\ncolor:#fff;border-radius:6px;font-size:12px;margin-right:8px}\n#mod-quant .ind {font-size:11px;color:#9aa0a6;background:#252b34;padding:3px 8px;border-radius:10px}\n#mod-quant .grid {display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:12px}\n#mod-quant .grid>div {background:#141920;border-radius:8px;padding:8px 10px}\n#mod-quant .grid label {display:block;color:#8b9199;font-size:11px;margin-bottom:2px}\n#mod-quant .grid b {font-size:15px;color:#fff}\n#mod-quant .grid small {color:#9aa0a6;font-size:10px;font-weight:400}\n#mod-quant .qt {display:block;color:#8b9199;font-size:10px;margin-top:3px;font-weight:400}\n#mod-quant .buy {color:#42a5f5!important}\n#mod-quant .sl {color:#ef5350!important}\n#mod-quant .tp {color:#66bb6a!important}\n#mod-quant .logic {background:#141920;border-radius:8px;padding:10px;margin-bottom:10px;font-size:13px}\n#mod-quant .logic label {display:block;color:#8b9199;font-size:11px;margin-bottom:4px}\n#mod-quant .tags {margin-bottom:8px}\n#mod-quant .tag {display:inline-block;font-size:11px;padding:3px 9px;border-radius:10px;margin:2px 4px 2px 0}\n#mod-quant .t-value {background:rgba(26,115,232,.18);color:#64b5f6}\n#mod-quant .t-gold {background:rgba(212,160,23,.20);color:#ffd54f}\n#mod-quant .t-def {background:rgba(102,187,106,.16);color:#81c784}\n#mod-quant .t-hot {background:rgba(255,152,0,.18);color:#ffb74d}\n#mod-quant .t-flow {background:rgba(233,30,99,.16);color:#f06292}\n#mod-quant .t-risk {background:rgba(229,57,53,.16);color:#e57373}\n#mod-quant .ff {font-size:12px;color:#9aa0a6;border-top:1px solid #262b34;padding-top:8px}\n#mod-quant .empty {background:#1a1f27;border:1px dashed #3a4048;border-radius:10px;padding:16px;color:#9aa0a6;font-size:13px}\n#mod-quant .warn {background:rgba(255,152,0,.10);border-left:3px solid #ff9800;padding:11px 14px;border-radius:0 8px 8px 0;\nfont-size:13px;color:#ffcc80;margin-top:12px}\n#mod-quant .foot {color:#6b7280;font-size:12px;text-align:center;padding:16px 0}",
+                          html: "<div class=\"wrap\">\n\n\n\n<div class=\"sub\">行情状态 <b style=\"color:#ffb74d\">🟡 盘前(昨收) @ 15:36:00</b>\n · 因子基于 2026-08-31 收盘 · 本金 200,000 元 ·\n <span style=\"color:#ef5350\">已剔除科创板/北交所/ST</span></div>\n<div class=\"sub\" style=\"margin-top:-10px\">\n下列<b>现价/买入区间/止损/止盈</b>全部按<b>最新一笔成交价</b>计算, 不是昨天的收盘价。\n盘前运行时现价=昨收, 属正常; 9:30 后重跑即为盘中实时。</div>\n\n<div class=\"panel\">\n  <h2>资金与仓位</h2>\n  <div class=\"bar\">\n    <div class=\"kpi\"><label>建议投入</label><b class=\"b\">175,062 元</b></div>\n    <div class=\"kpi\"><label>占用仓位</label><b class=\"b\">88%</b></div>\n    <div class=\"kpi\"><label>保留现金</label><b class=\"g\">24,938 元 (12%)</b></div>\n    <div class=\"kpi\"><label>组合结构</label><b>8 防御 + 2 黄金 + 2 国债</b></div>\n  </div>\n  <div class=\"gauge\"><i class=\"used\" style=\"width:87.53115%\"></i><i class=\"free\" style=\"width:12.468850000000003%\"></i></div>\n  <div class=\"legend\">■ 已投入 88%　■ 现金 12%　\n  —— <b>刻意不满仓</b>: 保留现金用于下跌补仓与突发机会</div>\n  <div class=\"legend\" style=\"margin-top:8px\">\n  🛡 <b>防御腿 69,947 元（35.0%）</b>8 只\n  红利/低波/价值 ETF <b>等权全买、不筛选</b>，天然分散、不需要行业约束　\n  🥇 <b>黄金腿 21,417 元（10.7%）</b>2 只黄金 ETF，\n  与 A 股相关性仅 <b>0.13</b>，是组合里唯一真正的分散化来源　\n  🏦 <b>现金腿 25,394 元（12.7%）</b>2 只国债 ETF，\n  年化 3.62%/回撤 −4.6%，<b>是会生息的现金</b>，T+0 随时可变现　\n  💵 <b>现金 24,938 元</b>（机动补仓）</div>\n  <div class=\"legend\" style=\"margin-top:6px;font-size:12px\">\n  目标权重 <b>26 / 4 / 35 / 10.5 / 17.5 / 7</b>\n  （<b>防御仓</b>4只 / <b>热点仓</b>1只 / 防御ETF / 黄金ETF / 国债ETF / 现金）。\n  回测（2020-2026，<b>可执行口径联合回测</b>：剔除科创板·北交所、个股股价≤120元、\n  同一现金池 + 真实整手约束 + 手续费与印花税，个股季频 + ETF 月频）：\n  年化 <b>11.37%</b>、波动 9.71%、夏普 <b>1.171</b>、最大回撤 <b>−8.23%</b>、\n  持有满 1 年亏损概率 <b>1.4%</b>。<br>\n  对照纯 ETF（个股 0%）：年化 6.95%、夏普 0.822、回撤 −8.96%、亏损概率 7.8% ——\n  加 30% 个股后<b>年化 +4.4pp、回撤反而收窄 0.7pp、亏损概率从 7.8% 降到 1.4%</b>，\n  因为两条腿日收益相关性只有 <b>0.110</b>。\n  详见 <code>配置决策终版报告.md</code>。</div>\n</div>\n\n\n<div class=\"panel\">\n  <h2>跨仓月度再平衡</h2>\n  <div class=\"empty\">尚无持仓账本。按今日建议建仓后运行 <code>--commit</code> 写入账本，\n  本面板即从下月起显示各仓权重偏离与调仓金额。</div>\n</div>\n\n\n\n<div class=\"panel\">\n  <h2>今日操作 · 持仓与卖出</h2>\n  <div class=\"empty\">当前<b>没有持仓记录</b>。下方为<b>建仓指令</b>,\n按建议成交后执行 <code style=\"color:#ffb74d\">python3.11 src/daily_advisor.py --commit</code>\n写入持仓账本, 之后每天自动盯盘并提示卖出/加仓。</div>\n</div>\n\n<div class=\"panel\">\n  <h2>买入清单（建仓）</h2>\n  <div class=\"cards\">\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">1</span>\n    <b>工商银行</b> <span class=\"code\">601398</span> <span class=\"drv dv\">🛡 修正六因子</span></div>\n    <div class=\"ind\">商业银行</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>8.15</b><small class=\"qt\">今日 <b style='color:#e53935'>+0.99%</b> · 15:34:59</small></div>\n    <div><label>买入区间</label><b class=\"buy\">8.11 ~ 8.23</b><small>卖一 8.16</small></div>\n    <div><label>止损价</label><b class='sl'>6.11 <small>(-8%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">9.37 / 10.19 <small>(+15%/+25%)</small></b></div>\n    <div><label>建议买入</label><b>15 手</b></div>\n    <div><label>投入金额</label><b>12,225 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div><b>修正六因子</b> 综合评分 z=<b>1.12</b> = 价值(+1.20) + 大市值(+3.39) + 动量(-0.14) + 反转(+0.55) + 低波动(+0.95) + 高流动性(+0.75)。六个子因子 IC 检验全部 t>2 显著；【为什么偏大市值而不是小市值】IC 检验显示沪深300 池内小市值是<b>负 alpha</b>(IC −0.028~−0.051, t=−3.2~−6.9)。原六因子合成写的是−z_size, 等于常年倒着下注; 修正符号后年化 3%→19%(纯个股腿口径)；【不设 −8% 止损】实测固定百分比止损对个股是<b>负贡献</b>: −8%/−12%/−20% 三档分别是 −5.99%/−0.20%/−4.46% 年化, 全部低于不止损。个股年化波动 40%+, 紧止损只会被正常波动扫出。本腿靠<b>季频调仓</b>换掉走坏的标的, 止损放宽到 −25% 只防黑天鹅；调仓频率 <b>Q</b>(1/4/7/10 月首个交易日); 回测季度调仓夏普 1.075 优于月度的 1.004；今日 +1.0%, 价格平稳</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🎯 修正六因子</span></div>\n  <div class='ff'>20日资金流 CMF: <b style='color:#e53935'>+0.20</b> · 20日涨幅 <b>+1.4%</b> · 成交额放大 <b>0.77×</b></div>\n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">2</span>\n    <b>农业银行</b> <span class=\"code\">601288</span> <span class=\"drv dv\">🛡 修正六因子</span></div>\n    <div class=\"ind\">商业银行</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>7.05</b><small class=\"qt\">今日 <b style='color:#e53935'>+1.88%</b> · 15:34:59</small></div>\n    <div><label>买入区间</label><b class=\"buy\">7.01 ~ 7.12</b><small>卖一 7.05</small></div>\n    <div><label>止损价</label><b class='sl'>5.29 <small>(-8%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">8.11 / 8.81 <small>(+15%/+25%)</small></b></div>\n    <div><label>建议买入</label><b>18 手</b></div>\n    <div><label>投入金额</label><b>12,690 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div><b>修正六因子</b> 综合评分 z=<b>1.03</b> = 价值(+0.87) + 大市值(+3.42) + 动量(-0.21) + 反转(+0.63) + 低波动(+0.81) + 高流动性(+0.64)。六个子因子 IC 检验全部 t>2 显著；【为什么偏大市值而不是小市值】IC 检验显示沪深300 池内小市值是<b>负 alpha</b>(IC −0.028~−0.051, t=−3.2~−6.9)。原六因子合成写的是−z_size, 等于常年倒着下注; 修正符号后年化 3%→19%(纯个股腿口径)；【不设 −8% 止损】实测固定百分比止损对个股是<b>负贡献</b>: −8%/−12%/−20% 三档分别是 −5.99%/−0.20%/−4.46% 年化, 全部低于不止损。个股年化波动 40%+, 紧止损只会被正常波动扫出。本腿靠<b>季频调仓</b>换掉走坏的标的, 止损放宽到 −25% 只防黑天鹅；调仓频率 <b>Q</b>(1/4/7/10 月首个交易日); 回测季度调仓夏普 1.075 优于月度的 1.004；今日小幅走强 +1.9%, 等回落再买</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🎯 修正六因子</span></div>\n  <div class='ff'>20日资金流 CMF: <b style='color:#e53935'>+0.21</b> · 20日涨幅 <b>+0.4%</b> · 成交额放大 <b>0.81×</b></div>\n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">3</span>\n    <b>民生银行</b> <span class=\"code\">600016</span> <span class=\"drv dv\">🛡 修正六因子</span></div>\n    <div class=\"ind\">商业银行</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>3.64</b><small class=\"qt\">今日 <b style='color:#e53935'>+3.12%</b> · 15:34:59</small></div>\n    <div><label>买入区间</label><b class=\"buy\">3.62 ~ 3.68</b><small>卖一 3.64</small></div>\n    <div><label>止损价</label><b class='sl'>2.73 <small>(-8%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">4.19 / 4.55 <small>(+15%/+25%)</small></b></div>\n    <div><label>建议买入</label><b>37 手</b></div>\n    <div><label>投入金额</label><b>13,468 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div><b>修正六因子</b> 综合评分 z=<b>1.01</b> = 价值(+4.99) + 大市值(+0.15) + 动量(-0.65) + 反转(+0.75) + 低波动(+1.18) + 高流动性(-0.35)。六个子因子 IC 检验全部 t>2 显著；【为什么偏大市值而不是小市值】IC 检验显示沪深300 池内小市值是<b>负 alpha</b>(IC −0.028~−0.051, t=−3.2~−6.9)。原六因子合成写的是−z_size, 等于常年倒着下注; 修正符号后年化 3%→19%(纯个股腿口径)；【不设 −8% 止损】实测固定百分比止损对个股是<b>负贡献</b>: −8%/−12%/−20% 三档分别是 −5.99%/−0.20%/−4.46% 年化, 全部低于不止损。个股年化波动 40%+, 紧止损只会被正常波动扫出。本腿靠<b>季频调仓</b>换掉走坏的标的, 止损放宽到 −25% 只防黑天鹅；调仓频率 <b>Q</b>(1/4/7/10 月首个交易日); 回测季度调仓夏普 1.075 优于月度的 1.004；20日资金流 CMF=<b>-0.02</b>, 主动卖盘占优, 需警惕；今日已冲高 <b>+3.1%</b>, 别追 —— 等回落到 <b>3.62</b> 以下再买</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🎯 修正六因子</span><span class=\"tag t-risk\">⚠ 资金流出</span><span class=\"tag t-risk\">今日 +3.1% 冲高</span></div>\n  <div class='ff'>20日资金流 CMF: <b style='color:#43a047'>-0.02</b> · 20日涨幅 <b>-3.3%</b> · 成交额放大 <b>0.92×</b></div>\n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">4</span>\n    <b>兴业银行</b> <span class=\"code\">601166</span> <span class=\"drv dv\">🛡 修正六因子</span></div>\n    <div class=\"ind\">商业银行</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>17.95</b><small class=\"qt\">今日 <b style='color:#e53935'>+2.34%</b> · 15:34:59</small></div>\n    <div><label>买入区间</label><b class=\"buy\">17.86 ~ 18.13</b><small>卖一 17.95</small></div>\n    <div><label>止损价</label><b class='sl'>13.46 <small>(-8%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">20.64 / 22.44 <small>(+15%/+25%)</small></b></div>\n    <div><label>建议买入</label><b>7 手</b></div>\n    <div><label>投入金额</label><b>12,565 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div><b>修正六因子</b> 综合评分 z=<b>0.96</b> = 价值(+2.51) + 大市值(+1.41) + 动量(-0.49) + 反转(+1.03) + 低波动(+1.00) + 高流动性(+0.31)。六个子因子 IC 检验全部 t>2 显著；【为什么偏大市值而不是小市值】IC 检验显示沪深300 池内小市值是<b>负 alpha</b>(IC −0.028~−0.051, t=−3.2~−6.9)。原六因子合成写的是−z_size, 等于常年倒着下注; 修正符号后年化 3%→19%(纯个股腿口径)；【不设 −8% 止损】实测固定百分比止损对个股是<b>负贡献</b>: −8%/−12%/−20% 三档分别是 −5.99%/−0.20%/−4.46% 年化, 全部低于不止损。个股年化波动 40%+, 紧止损只会被正常波动扫出。本腿靠<b>季频调仓</b>换掉走坏的标的, 止损放宽到 −25% 只防黑天鹅；调仓频率 <b>Q</b>(1/4/7/10 月首个交易日); 回测季度调仓夏普 1.075 优于月度的 1.004；20日资金流 CMF=<b>-0.12</b>, 主动卖盘占优, 需警惕；今日小幅走强 +2.3%, 等回落再买</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🎯 修正六因子</span><span class=\"tag t-risk\">⚠ 资金流出</span></div>\n  <div class='ff'>20日资金流 CMF: <b style='color:#43a047'>-0.12</b> · 20日涨幅 <b>-8.2%</b> · 成交额放大 <b>1.33×</b></div>\n</div>\n<div class=\"card hot\">\n  <div class=\"card-hd\"><div><span class=\"rank\">5</span>\n    <b>招商轮船</b> <span class=\"code\">601872</span> <span class=\"drv dh\">🔥 热点驱动</span></div>\n    <div class=\"ind\">运输业</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>18.39</b><small class=\"qt\">今日 <b style='color:#43a047'>-1.92%</b> · 15:34:59</small></div>\n    <div><label>买入区间</label><b class=\"buy\">18.30 ~ 18.57</b><small>卖一 18.39</small></div>\n    <div><label>止损价</label><b class='sl'>16.92 <small>(-8%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">21.15 / 22.99 <small>(+15%/+25%)</small></b></div>\n    <div><label>建议买入</label><b>4 手</b></div>\n    <div><label>投入金额</label><b>7,356 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div><b>12-1动量 +201.6%</b>(近12个月收益 − 最近1个月收益), 横截面 z=<b>3.13</b> —— 中期趋势向上, 且已剔除近1个月涨幅, 避开A股短期反转陷阱；<b>不追高验证</b>: 近20日 <b>+10.1%</b>(上限 +15%)、现价为52周高点的 <b>88%</b>(上限 95%, 即不买创新高的)、资金流 CMF=<b>-0.00</b>(下限 -0.15, 不接资金出逃的票)。<b>三条全过才买入</b>；【为什么必须不追高】可执行口径(剔除科创板/北交所、股价≤120元、真实整手与税费)下, 同样 4 防 26% + 1 热 4% 的仓位: 裸动量(追高)年化 <b>10.29%</b>、夏普 <b>1.055</b>、回撤 −8.45%、<b>持1年亏损概率 3.7%</b>; 加上这三条约束后 年化 <b>11.37%</b>、夏普 <b>1.171</b>、回撤 −8.23%、<b>亏损概率 1.4%</b>。<b>收益更高、风险更低</b> —— 追高不是换来收益, 是纯粹白付风险；【为什么只买 1 只】热点只数敏感性(个股总仓恒为 30%): 1只×4% 夏普 <b>1.171</b> → 2只×5% <b>1.013</b> → 全仓5只热点 更低。热点只数越多, 越接近'追涨组合', 夏普单调下降。它是调味品不是主菜, 严格限定 4%；【为什么恰好 4%】热点权重跨 8 个起始点检验: 4% 的夏普均值 <b>1.281</b>、最差 <b>1.171</b> 都是最高(5% 为 1.256/1.127, 6% 为 1.246/1.113, 3% 为 1.189/1.055)。4% 是稳健的甜点；20日资金流 CMF=<b>-0.00</b>(主动卖盘占优)；近5日成交额为60日均量的 <b>0.81倍</b>；今日小幅回落 1.9%, 可在区间下沿挂单</div></div>\n  <div class=\"tags\"><span class=\"tag t-hot\">🔥 热点驱动</span><span class=\"tag t-def\">✅ 不追高</span><span class=\"tag t-risk\">⚠ 资金流出</span></div>\n  <div class='ff'>20日资金流 CMF: <b style='color:#43a047'>-0.00</b> · 20日涨幅 <b>+10.1%</b> · 成交额放大 <b>0.81×</b></div>\n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">6</span>\n    <b>价值ETF富国</b> <span class=\"code\">512040</span> <span class=\"drv dv\">🛡 防御ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>1.23</b><small class=\"qt\">今日 <b style='color:#e53935'>+0.41%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">1.23 ~ 1.24</b><small>卖一 398100.00</small></div>\n    <div><label>止损价</label><b class='sl'>1.04 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">1.60 / 1.84 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>71 手</b></div>\n    <div><label>投入金额</label><b>8,726 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🛡 防御ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">7</span>\n    <b>红利低波ETF华泰柏瑞</b> <span class=\"code\">512890</span> <span class=\"drv dv\">🛡 防御ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>1.21</b><small class=\"qt\">今日 <b style='color:#e53935'>+1.34%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">1.21 ~ 1.22</b><small>卖一 2469300.00</small></div>\n    <div><label>止损价</label><b class='sl'>1.03 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">1.57 / 1.81 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>72 手</b></div>\n    <div><label>投入金额</label><b>8,698 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🛡 防御ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">8</span>\n    <b>红利ETF华泰柏瑞</b> <span class=\"code\">510880</span> <span class=\"drv dv\">🛡 防御ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>3.48</b><small class=\"qt\">今日 <b style='color:#43a047'>-0.20%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">3.48 ~ 3.51</b><small>卖一 165600.00</small></div>\n    <div><label>止损价</label><b class='sl'>2.96 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">4.53 / 5.22 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>25 手</b></div>\n    <div><label>投入金额</label><b>8,705 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🛡 防御ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">9</span>\n    <b>沪深300红利ETF建信</b> <span class=\"code\">512530</span> <span class=\"drv dv\">🛡 防御ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>1.68</b><small class=\"qt\">今日 <b style='color:#e53935'>+1.02%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">1.67 ~ 1.69</b><small>卖一 120500.00</small></div>\n    <div><label>止损价</label><b class='sl'>1.43 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">2.18 / 2.52 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>52 手</b></div>\n    <div><label>投入金额</label><b>8,726 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🛡 防御ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">10</span>\n    <b>价值ETF华宝</b> <span class=\"code\">510030</span> <span class=\"drv dv\">🛡 防御ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>1.09</b><small class=\"qt\">今日 <b style='color:#e53935'>+1.77%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">1.09 ~ 1.10</b><small>卖一 193100.00</small></div>\n    <div><label>止损价</label><b class='sl'>0.93 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">1.42 / 1.64 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>80 手</b></div>\n    <div><label>投入金额</label><b>8,744 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🛡 防御ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">11</span>\n    <b>中国低波ETF平安</b> <span class=\"code\">512390</span> <span class=\"drv dv\">🛡 防御ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>1.24</b><small class=\"qt\">今日 <b style='color:#e53935'>+0.16%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">1.24 ~ 1.25</b><small>卖一 177800.00</small></div>\n    <div><label>止损价</label><b class='sl'>1.05 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">1.61 / 1.86 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>71 手</b></div>\n    <div><label>投入金额</label><b>8,797 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🛡 防御ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">12</span>\n    <b>基本面50ETF嘉实</b> <span class=\"code\">512750</span> <span class=\"drv dv\">🛡 防御ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>1.47</b><small class=\"qt\">今日 <b style='color:#e53935'>+1.10%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">1.46 ~ 1.48</b><small>卖一 143600.00</small></div>\n    <div><label>止损价</label><b class='sl'>1.25 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">1.91 / 2.20 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>60 手</b></div>\n    <div><label>投入金额</label><b>8,796 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🛡 防御ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">13</span>\n    <b>180治理ETF交银</b> <span class=\"code\">510010</span> <span class=\"drv dv\">🛡 防御ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>1.79</b><small class=\"qt\">今日 <b style='color:#e53935'>+1.02%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">1.78 ~ 1.80</b><small>卖一 100.00</small></div>\n    <div><label>止损价</label><b class='sl'>1.52 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">2.32 / 2.68 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>49 手</b></div>\n    <div><label>投入金额</label><b>8,756 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>红利/低波/价值类 ETF <b>8 只等权、全部买入、不做筛选</b>。回测(2020-2026, 已修正份额折算 + 加回分红) 等权8只年化 <b>9.52%</b>、夏普 <b>0.681</b>、回撤 <b>-17.1%</b>。【为什么不改用收益更高的等权3只/5只】: 那两组(11.34%/10.61%)是按2020-2026 夏普排序事后挑出来的, 属于挑票不是因子 —— 全买虽然少赚,但换来的是【可复现】。【为什么不买个股】: 防御四因子个股在 5只+行业分散约束下, 修复引擎 bug 后年化只有 <b>2.15%</b>、夏普 0.075 —— 它的 alpha 与押注金融地产高度重合,一分散就没了。ETF 天然是一篮子, 根本不需要行业约束。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🛡 防御ETF</span></div>\n  \n</div>\n<div class=\"card gold\">\n  <div class=\"card-hd\"><div><span class=\"rank\">14</span>\n    <b>黄金ETF易方达</b> <span class=\"code\">159934</span> <span class=\"drv dg\">🥇 黄金ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>9.52</b><small class=\"qt\">今日 <b style='color:#43a047'>-0.19%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">9.50 ~ 9.60</b><small>卖一 188900.00</small></div>\n    <div><label>止损价</label><b class='sl'>8.09 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">12.38 / 14.28 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>11 手</b></div>\n    <div><label>投入金额</label><b>10,475 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>与 A股防御 ETF 相关性仅 <b>0.13</b>、与国债 <b>0.07</b>, 是本组合里唯一真正的分散化来源。2020-2026 年化 <b>15.83%</b>、夏普 <b>0.909</b>。【为什么要压到 15% 而不是最优解想要 30-40%】: 黄金这段收益高度依赖2024(+27.5%)和 2025(<b>+61.0%</b>)两年。把权重建在这种一次性行情上是过拟合。15% 是<b>先验锚定</b>的保险仓位 —— 它在 2022 年 A股下跌时贡献 +9.3%, 起的是对冲作用, 不是收益主力。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-gold\">🥇 黄金ETF</span></div>\n  \n</div>\n<div class=\"card gold\">\n  <div class=\"card-hd\"><div><span class=\"rank\">15</span>\n    <b>黄金ETF华安</b> <span class=\"code\">518880</span> <span class=\"drv dg\">🥇 黄金ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>9.12</b><small class=\"qt\">今日 <b style='color:#43a047'>-0.19%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">9.10 ~ 9.19</b><small>卖一 194000.00</small></div>\n    <div><label>止损价</label><b class='sl'>7.75 <small>(-15%)</small></b></div>\n    <div><label>止盈价</label><b class=\"tp\">11.85 / 13.68 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>12 手</b></div>\n    <div><label>投入金额</label><b>10,942 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>与 A股防御 ETF 相关性仅 <b>0.13</b>、与国债 <b>0.07</b>, 是本组合里唯一真正的分散化来源。2020-2026 年化 <b>15.83%</b>、夏普 <b>0.909</b>。【为什么要压到 15% 而不是最优解想要 30-40%】: 黄金这段收益高度依赖2024(+27.5%)和 2025(<b>+61.0%</b>)两年。把权重建在这种一次性行情上是过拟合。15% 是<b>先验锚定</b>的保险仓位 —— 它在 2022 年 A股下跌时贡献 +9.3%, 起的是对冲作用, 不是收益主力。；止损放宽到 <b>-15%</b>(个股是 -8%): ETF 无退市/暴雷风险, 紧止损只会被波动震出；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-gold\">🥇 黄金ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">16</span>\n    <b>十年国债ETF国泰</b> <span class=\"code\">511260</span> <span class=\"drv dv\">🏦 国债ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>135.78</b><small class=\"qt\">今日 <b style='color:#e53935'>+0.07%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">135.51 ~ 136.87</b><small>卖一 5300.00</small></div>\n    <div><label>止损价</label><b class='sl'>不设止损</b></div>\n    <div><label>止盈价</label><b class=\"tp\">176.52 / 203.67 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>1 手</b></div>\n    <div><label>投入金额</label><b>13,578 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>替代现金: 十年国债ETF 2020-2026 年化 <b>3.62%</b>、夏普 <b>1.488</b>、最大回撤仅 <b>-4.6%</b>, 全面优于活期 1.8%。<b>T+0 交易</b>, 需要用钱随时可卖, 本质上是会生息的现金。【为什么用 2 只】: 单只 1 手要 1.3 万元, 25% 仓位只能买 3~4 手, 权重误差高达 6.8pp; 拆成 2 只后误差降到 0.4pp, 代价仅 0.10pp 年化。；不设止损: 国债 ETF 的回撤来源是利率波动, 不是信用违约, 跌了拿久期会补回来；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🏦 国债ETF</span></div>\n  \n</div>\n<div class=\"card val\">\n  <div class=\"card-hd\"><div><span class=\"rank\">17</span>\n    <b>国债ETF平安</b> <span class=\"code\">511020</span> <span class=\"drv dv\">🏦 国债ETF</span></div>\n    <div class=\"ind\">ETF</div></div>\n  <div class=\"grid\">\n    <div><label>最新成交价</label><b>118.16</b><small class=\"qt\">今日 <b style='color:#e53935'>+0.06%</b> · 00</small></div>\n    <div><label>买入区间</label><b class=\"buy\">117.92 ~ 119.10</b><small>卖一 25200.00</small></div>\n    <div><label>止损价</label><b class='sl'>不设止损</b></div>\n    <div><label>止盈价</label><b class=\"tp\">153.61 / 177.24 <small>(+30%/+50%)</small></b></div>\n    <div><label>建议买入</label><b>1 手</b></div>\n    <div><label>投入金额</label><b>11,816 元</b></div>\n  </div>\n  <div class=\"logic\"><label>买入逻辑</label><div>替代现金: 十年国债ETF 2020-2026 年化 <b>3.62%</b>、夏普 <b>1.488</b>、最大回撤仅 <b>-4.6%</b>, 全面优于活期 1.8%。<b>T+0 交易</b>, 需要用钱随时可卖, 本质上是会生息的现金。【为什么用 2 只】: 单只 1 手要 1.3 万元, 25% 仓位只能买 3~4 手, 权重误差高达 6.8pp; 拆成 2 只后误差降到 0.4pp, 代价仅 0.10pp 年化。；不设止损: 国债 ETF 的回撤来源是利率波动, 不是信用违约, 跌了拿久期会补回来；ETF 卖出<b>免印花税</b>(个股要 0.05%), 月度调仓比个股省一笔</div></div>\n  <div class=\"tags\"><span class=\"tag t-value\">🏦 国债ETF</span></div>\n  \n</div></div>\n  \n  <div class=\"warn\">⚠️ <b>执行纪律</b>: 买入价尽量落在区间内; 盘中<b>挂限价单</b>而不是市价追;\n  触发止损无条件卖出, 不与股票谈感情。热点仓为<b>右侧追涨</b>, 涨多后回撤风险显著高于价值仓。\n  以上为量化信号, <b>非投资建议</b>, 历史回测不代表未来。</div>\n</div>\n\n<div class=\"panel\">\n  <h2>行业分布 · 检查有没有把鸡蛋放一个篮子</h2>\n  <table class=\"tbl\"><thead><tr><th>中证行业大类</th>\n  <th>门类</th><th>只数</th>\n  <th>金额</th><th>占总本金</th></tr></thead><tbody><tr><td>🛡 <b>ETF</b></td><td style='color:#9aa0a6'></td><td>12</td><td>116,758</td><td>58.4%</td></tr><tr><td>🛡 <b>商业银行</b></td><td style='color:#9aa0a6'>金融</td><td>4</td><td>50,948</td><td>25.5%</td></tr><tr><td>🔥 <b>运输业</b></td><td style='color:#9aa0a6'>工业</td><td>1</td><td>7,356</td><td>3.7%</td></tr></tbody></table>\n  <div class=\"legend\" style=\"margin-top:8px\">分散在\n  <b>3</b> 个行业, 个股腿<b>不设行业上限</b>(实测强制分散有害, 详见下方说明)。</div>\n  <div class=\"warn\"><b>个股腿为什么不设行业上限</b>: 可执行口径实测强制分散是<b>全面有害</b>的 —— 无约束 夏普 <b>1.171</b> / 回撤 −8.23% / 亏损概率 1.4%; 2只/行业 0.953 / −10.25% / 3.0%; 1只/行业 0.813 / −11.43% / <b>6.7%</b>。强制分散不只是降收益, 它同时<b>抬高波动、加深回撤、把亏损概率翻 5 倍</b> —— 因为逼你放弃最优标的去买次优的。风险控制靠<b>仓位 30%</b> 而不是选股约束。<br><b>但要清醒</b>: 当前防御仓 4 只全是银行, 相关性 0.8+, 本质是<b>同一个宏观赌注</b>(利率 + 信用), 分散度低于表面。这不是 bug, 是因子在当前市场的自然结果 —— 价值+大市值+低波动+高流动性 的极值就是银行股。<b>必须承认的风险</b>: 回测区间 2020-2026 恰好覆盖银行估值修复这一段, 该信号可能是<b>阶段性而非永久</b>的。若你无法接受这种集中, 把文件顶部 <code>W_DEF_EACH</code> 调低即可, 代价是收益下移。</div>\n</div>\n\n<div class=\"panel\">\n  <h2>近期资金在炒什么（沪深300 内动量/活跃度榜）</h2>\n  <div class=\"legend\" style=\"margin-bottom:8px\">ℹ️ <b>仅供参考，本表的动量榜不产生交易信号。</b>\n  <b>v5 起这张榜开始产生真实交易信号</b> —— 热点仓的<b>种子池</b>就是 12-1 动量，\n  但必须闯过<b>三道不追高闸门</b>才买：近20日涨幅 ≤ +15%、现价 ≤ 52周高点的 95%、\n  资金流 CMF ≥ −0.15。三条全过才进池，再取动量最高的一只。<br>\n  <b>为什么必须加闸门</b>：同样 4 防 26% + 1 热 4% 的仓位，裸动量（追高）年化 10.29%、\n  夏普 1.055、<b>亏损概率 3.7%</b>；加闸门后年化 11.37%、夏普 1.171、<b>亏损概率 1.4%</b>。\n  追高不是换来收益，是<b>纯白付风险</b>。<br>\n  <b>为什么热点仓只买 1 只、只给 4%</b>：只数敏感性 1只×4% 夏普 1.171 → 2只×5% 1.013 →\n  全仓热点 更低；权重跨 8 个起始点检验，4% 的夏普均值 1.281、最差 1.171 都是最高。\n  它是<b>调味品不是主菜</b>。</div>\n  <table class=\"tbl\"><thead><tr><th>#</th><th>名称</th><th>代码</th><th>行业</th>\n  <th>20日涨幅</th><th>成交额放大</th></tr></thead><tbody><tr><td>1</td><td><b>山东黄金</b></td><td class='code'>600547</td><td>贵金属</td><td style='color:#e53935'>+37.2%</td><td>1.77×</td></tr><tr><td>2</td><td><b>英维克</b></td><td class='code'>002837</td><td>专用机械</td><td style='color:#e53935'>+46.8%</td><td>1.61×</td></tr><tr><td>3</td><td><b>生益科技</b></td><td class='code'>600183</td><td>电子元件</td><td style='color:#e53935'>+50.3%</td><td>1.10×</td></tr><tr><td>4</td><td><b>东方盛虹</b></td><td class='code'>000301</td><td>化学原料</td><td style='color:#e53935'>+20.3%</td><td>1.26×</td></tr><tr><td>5</td><td><b>中金黄金</b></td><td class='code'>600489</td><td>贵金属</td><td style='color:#e53935'>+15.7%</td><td>1.25×</td></tr><tr><td>6</td><td><b>中煤能源</b></td><td class='code'>601898</td><td>煤炭</td><td style='color:#e53935'>+21.7%</td><td>1.07×</td></tr><tr><td>7</td><td><b>江西铜业</b></td><td class='code'>600362</td><td>工业金属</td><td style='color:#e53935'>+12.6%</td><td>1.27×</td></tr><tr><td>8</td><td><b>荣盛石化</b></td><td class='code'>002493</td><td>化学原料</td><td style='color:#e53935'>+21.0%</td><td>1.04×</td></tr></tbody></table>\n  <div class=\"warn\">这张榜是<b>当前市场热点方向</b>。若你的持仓方向与它背离,\n  说明你在\"左侧埋伏\"(可能长期不涨); 若一致则在\"右侧跟随\"(需防高位回撤)。</div>\n</div>\n\n<div class=\"foot\">生成时间 2026-09-02 00:58 · 实时行情 新浪财经 / 因子数据 AkShare ·\n仅供研究, 不构成投资建议</div>\n</div>" };
+window.__ANALYZE__   = {"003005": {"code": "003005", "ts": "2026-09-03 01:11:00", "name": "竞业达", "bars": 400, "factors": {"price": 20.0, "r20": 39.96, "r60": 30.21, "r250": -16.7, "mom_12_1": -40.48, "vol60": 59.63, "cmf20": 0.239, "high250": 24.57, "pct_from_high": 81.4}, "exec": {"price": 20.0, "max_price": 120.0, "lot_amount": 2000.0, "budget": 13000.0, "hands": 6, "cost": 12000.0, "pos_pct": 6.0, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+40.0%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "81.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.239", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "东财财经", "淘股吧", "韭研公社"], "score": 0.5867393342674703, "nsrc": 6, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：6 个数据源同时点名"], "risks": ["12-1 动量 -40.5%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 60%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600967": {"code": "600967", "ts": "2026-09-03 01:11:08", "name": "内蒙一机", "bars": 400, "factors": {"price": 13.41, "r20": 15.4, "r60": 14.91, "r250": -46.17, "mom_12_1": -53.35, "vol60": 48.02, "cmf20": 0.219, "high250": 26.04, "pct_from_high": 51.5}, "exec": {"price": 13.41, "max_price": 120.0, "lot_amount": 1341.0, "budget": 13000.0, "hands": 9, "cost": 12069.0, "pos_pct": 6.03, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+15.4%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "51.5%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.219", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "东财财经", "韭研公社"], "score": 0.5857711862322605, "nsrc": 5, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：5 个数据源同时点名"], "risks": ["12-1 动量 -53.4%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002418": {"code": "002418", "ts": "2026-09-03 01:11:16", "name": "康盛股份", "bars": 400, "factors": {"price": 5.81, "r20": 57.45, "r60": 30.56, "r250": 32.05, "mom_12_1": -16.14, "vol60": 73.78, "cmf20": 0.15, "high250": 7.12, "pct_from_high": 81.6}, "exec": {"price": 5.81, "max_price": 120.0, "lot_amount": 581.0, "budget": 13000.0, "hands": 22, "cost": 12782.0, "pos_pct": 6.39, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+57.5%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "81.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.150", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "东财财经", "淘股吧"], "score": 0.5605706380384602, "nsrc": 5, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：5 个数据源同时点名"], "risks": ["12-1 动量 -16.1%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 74%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "003040": {"code": "003040", "ts": "2026-09-03 01:11:23", "name": "楚天龙", "bars": 400, "factors": {"price": 21.12, "r20": 86.41, "r60": 72.97, "r250": -20.24, "mom_12_1": -57.21, "vol60": 66.24, "cmf20": 0.488, "high250": 26.82, "pct_from_high": 78.7}, "exec": {"price": 21.12, "max_price": 120.0, "lot_amount": 2112.0, "budget": 13000.0, "hands": 6, "cost": 12672.0, "pos_pct": 6.34, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+86.4%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "78.7%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.488", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "淘股吧"], "score": 0.763252574867523, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -57.2%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 66%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "000017": {"code": "000017", "ts": "2026-09-03 01:11:31", "name": "深中华A", "bars": 400, "factors": {"price": 11.75, "r20": 89.52, "r60": 129.49, "r250": 73.82, "mom_12_1": -8.28, "vol60": 70.66, "cmf20": 0.709, "high250": 11.84, "pct_from_high": 99.2}, "exec": {"price": 11.75, "max_price": 120.0, "lot_amount": 1175.0, "budget": 13000.0, "hands": 11, "cost": 12925.0, "pos_pct": 6.46, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+89.5%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "99.2%", "limit": "95%", "pass": false}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.709", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "东财财经"], "score": 0.7111338223674749, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -8.3%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%、现价 ≤ 52周高点的 95%", "年化波动 71%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "605577": {"code": "605577", "ts": "2026-09-03 01:11:39", "name": "", "bars": 400, "factors": {"price": 12.85, "r20": 33.3, "r60": 32.34, "r250": -6.14, "mom_12_1": -29.58, "vol60": 49.05, "cmf20": 0.292, "high250": 16.1, "pct_from_high": 79.8}, "exec": {"price": 12.85, "max_price": 120.0, "lot_amount": 1285.0, "budget": 13000.0, "hands": 10, "cost": 12850.0, "pos_pct": 6.42, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+33.3%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "79.8%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.292", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "东财财经"], "score": 0.7046363117893968, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": false, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -29.6%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "300413": {"code": "300413", "ts": "2026-09-03 01:11:47", "name": "", "bars": 400, "factors": {"price": 20.52, "r20": 24.59, "r60": 28.81, "r250": -18.21, "mom_12_1": -34.36, "vol60": 63.89, "cmf20": -0.139, "high250": 35.78, "pct_from_high": 57.4}, "exec": {"price": 20.52, "max_price": 120.0, "lot_amount": 2052.0, "budget": 13000.0, "hands": 6, "cost": 12312.0, "pos_pct": 6.16, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+24.6%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "57.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "-0.139", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "东财财经", "淘股吧"], "score": 0.6746508957668472, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": false, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -34.4%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 64%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600869": {"code": "600869", "ts": "2026-09-03 01:11:56", "name": "远东股份", "bars": 400, "factors": {"price": 19.5, "r20": 28.8, "r60": -34.14, "r250": 201.86, "mom_12_1": 134.37, "vol60": 90.3, "cmf20": 0.19, "high250": 38.56, "pct_from_high": 50.6}, "exec": {"price": 19.5, "max_price": 120.0, "lot_amount": 1950.0, "budget": 13000.0, "hands": 6, "cost": 11700.0, "pos_pct": 5.85, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+28.8%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "50.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.190", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "韭研公社"], "score": 0.6630482303992143, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流出前列", "股票简称": "远东股份", "最新价": 19.5, "涨跌幅": "9.98%", "净额": "-5.81亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 0, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["12-1 动量 +134.4%，中期趋势向上", "情绪共振：4 个数据源同时点名"], "risks": ["未过闸门：近20日涨幅 ≤ +15%", "年化波动 90%，波动偏大", "主力资金流出前列"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002855": {"code": "002855", "ts": "2026-09-03 01:12:03", "name": "捷荣技术", "bars": 400, "factors": {"price": 19.01, "r20": 93.78, "r60": 70.95, "r250": -5.14, "mom_12_1": -51.05, "vol60": 60.98, "cmf20": 0.704, "high250": 20.48, "pct_from_high": 92.8}, "exec": {"price": 19.01, "max_price": 120.0, "lot_amount": 1901.0, "budget": 13000.0, "hands": 6, "cost": 11406.0, "pos_pct": 5.7, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+93.8%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "92.8%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.704", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "韭研公社"], "score": 0.6628588273006812, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -51.0%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 61%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002536": {"code": "002536", "ts": "2026-09-03 01:12:11", "name": "飞龙股份", "bars": 400, "factors": {"price": 58.07, "r20": 52.14, "r60": 41.22, "r250": 102.19, "mom_12_1": 32.9, "vol60": 99.21, "cmf20": 0.164, "high250": 58.79, "pct_from_high": 98.8}, "exec": {"price": 58.07, "max_price": 120.0, "lot_amount": 5807.0, "budget": 13000.0, "hands": 2, "cost": 11614.0, "pos_pct": 5.81, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+52.1%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "98.8%", "limit": "95%", "pass": false}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.164", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "韭研公社"], "score": 0.6463779432983907, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 1, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["12-1 动量 +32.9%，中期趋势向上", "情绪共振：4 个数据源同时点名"], "risks": ["未过闸门：近20日涨幅 ≤ +15%、现价 ≤ 52周高点的 95%", "年化波动 99%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002104": {"code": "002104", "ts": "2026-09-03 01:12:19", "name": "恒宝股份", "bars": 400, "factors": {"price": 13.51, "r20": 26.38, "r60": 19.66, "r250": -52.43, "mom_12_1": -62.36, "vol60": 62.74, "cmf20": 0.112, "high250": 30.39, "pct_from_high": 44.5}, "exec": {"price": 13.51, "max_price": 120.0, "lot_amount": 1351.0, "budget": 13000.0, "hands": 9, "cost": 12159.0, "pos_pct": 6.08, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+26.4%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "44.5%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.112", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "淘股吧"], "score": 0.642099139313885, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -62.4%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 63%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "300308": {"code": "300308", "ts": "2026-09-03 01:12:26", "name": "中际旭创", "bars": 400, "factors": {"price": 822.4, "r20": -13.23, "r60": -30.31, "r250": 210.77, "mom_12_1": 258.14, "vol60": 87.72, "cmf20": -0.111, "high250": 1416.88, "pct_from_high": 58.0}, "exec": {"price": 822.4, "max_price": 120.0, "lot_amount": 82240.0, "budget": 13000.0, "hands": 0, "cost": 0.0, "pos_pct": 0.0, "ok": false, "reason": "股价 822.4 元 > 上限 120.0 元，1 手需 82,240 元，占本金 41.1%"}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-13.2%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "58.0%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "-0.111", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "东财财经", "韭研公社"], "score": 0.6371690776508161, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流出前列", "股票简称": "中际旭创", "最新价": 822.4, "涨跌幅": "-4.29%", "净额": "-22.46亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": false, "score": -3, "verdict": "不可执行", "verdict_color": "red", "reasons": ["12-1 动量 +258.1%，中期趋势向上", "三道不追高闸门全过（不追高）", "情绪共振：4 个数据源同时点名"], "risks": ["不可执行：股价 822.4 元 > 上限 120.0 元，1 手需 82,240 元，占本金 41.1%", "年化波动 88%，波动偏大", "主力资金流出前列"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "000635": {"code": "000635", "ts": "2026-09-03 01:12:34", "name": "英力特", "bars": 400, "factors": {"price": 7.94, "r20": 23.29, "r60": 13.75, "r250": -12.94, "mom_12_1": -29.39, "vol60": 45.03, "cmf20": 0.108, "high250": 10.93, "pct_from_high": 72.6}, "exec": {"price": 7.94, "max_price": 120.0, "lot_amount": 794.0, "budget": 13000.0, "hands": 16, "cost": 12704.0, "pos_pct": 6.35, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+23.3%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "72.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.108", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "东财财经"], "score": 0.6161408981948416, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -29.4%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "000506": {"code": "000506", "ts": "2026-09-03 01:12:42", "name": "招金黄金", "bars": 400, "factors": {"price": 21.08, "r20": 34.96, "r60": 56.61, "r250": 116.87, "mom_12_1": 60.7, "vol60": 91.34, "cmf20": 0.173, "high250": 28.52, "pct_from_high": 73.9}, "exec": {"price": 21.08, "max_price": 120.0, "lot_amount": 2108.0, "budget": 13000.0, "hands": 6, "cost": 12648.0, "pos_pct": 6.32, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+35.0%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "73.9%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.173", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告", "东财财经"], "score": 0.613746342724489, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "招金黄金", "最新价": 21.08, "涨跌幅": "5.03%", "净额": "2.37亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 2, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["12-1 动量 +60.7%，中期趋势向上", "情绪共振：4 个数据源同时点名", "主力资金流入前列"], "risks": ["未过闸门：近20日涨幅 ≤ +15%", "年化波动 91%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601606": {"code": "601606", "ts": "2026-09-03 01:12:50", "name": "长城军工", "bars": 400, "factors": {"price": 36.62, "r20": 8.86, "r60": 16.03, "r250": -40.99, "mom_12_1": -45.79, "vol60": 64.35, "cmf20": 0.077, "high250": 77.06, "pct_from_high": 47.5}, "exec": {"price": 36.62, "max_price": 120.0, "lot_amount": 3662.0, "budget": 13000.0, "hands": 3, "cost": 10986.0, "pos_pct": 5.49, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+8.9%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "47.5%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.077", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "东财财经", "韭研公社"], "score": 0.5392588203746453, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 2, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）", "情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -45.8%，中期趋势走弱", "年化波动 64%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "301357": {"code": "301357", "ts": "2026-09-03 01:12:57", "name": "北方长龙", "bars": 400, "factors": {"price": 106.3, "r20": 12.85, "r60": 19.44, "r250": -34.57, "mom_12_1": -42.02, "vol60": 82.07, "cmf20": 0.024, "high250": 197.87, "pct_from_high": 53.7}, "exec": {"price": 106.3, "max_price": 120.0, "lot_amount": 10630.0, "budget": 13000.0, "hands": 1, "cost": 10630.0, "pos_pct": 5.32, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+12.8%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "53.7%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.024", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "东财财经", "韭研公社"], "score": 0.5002195454951142, "nsrc": 4, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 2, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）", "情绪共振：4 个数据源同时点名"], "risks": ["12-1 动量 -42.0%，中期趋势走弱", "年化波动 82%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002274": {"code": "002274", "ts": "2026-09-03 01:13:05", "name": "华昌化工", "bars": 400, "factors": {"price": 7.12, "r20": 28.29, "r60": 24.04, "r250": 7.39, "mom_12_1": -16.29, "vol60": 45.3, "cmf20": 0.573, "high250": 7.64, "pct_from_high": 93.2}, "exec": {"price": 7.12, "max_price": 120.0, "lot_amount": 712.0, "budget": 13000.0, "hands": 18, "cost": 12816.0, "pos_pct": 6.41, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+28.3%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "93.2%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.573", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告"], "score": 0.9031575453851515, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -16.3%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002064": {"code": "002064", "ts": "2026-09-03 01:13:12", "name": "华峰化学", "bars": 400, "factors": {"price": 11.68, "r20": 1.13, "r60": 16.92, "r250": 49.17, "mom_12_1": 47.51, "vol60": 56.39, "cmf20": -0.055, "high250": 13.84, "pct_from_high": 84.4}, "exec": {"price": 11.68, "max_price": 120.0, "lot_amount": 1168.0, "budget": 13000.0, "hands": 11, "cost": 12848.0, "pos_pct": 6.42, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+1.1%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "84.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "-0.055", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": ["股吧", "公告", "东财财经"], "score": 0.8326736797077713, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 5, "verdict": "值得关注", "verdict_color": "green", "reasons": ["12-1 动量 +47.5%，中期趋势向上", "三道不追高闸门全过（不追高）", "情绪共振：3 个数据源同时点名"], "risks": ["年化波动 56%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "003039": {"code": "003039", "ts": "2026-09-03 01:13:20", "name": "顺控发展", "bars": 400, "factors": {"price": 13.77, "r20": 15.04, "r60": 16.69, "r250": -1.57, "mom_12_1": -14.44, "vol60": 32.97, "cmf20": 0.236, "high250": 18.37, "pct_from_high": 75.0}, "exec": {"price": 13.77, "max_price": 120.0, "lot_amount": 1377.0, "budget": 13000.0, "hands": 9, "cost": 12393.0, "pos_pct": 6.2, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+15.0%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "75.0%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.236", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "韭研公社"], "score": 0.8215516038518925, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -14.4%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601086": {"code": "601086", "ts": "2026-09-03 01:13:28", "name": "国芳集团", "bars": 400, "factors": {"price": 11.1, "r20": 39.97, "r60": 54.6, "r250": 0.36, "mom_12_1": -28.3, "vol60": 54.39, "cmf20": 0.325, "high250": 13.55, "pct_from_high": 81.9}, "exec": {"price": 11.1, "max_price": 120.0, "lot_amount": 1110.0, "budget": 13000.0, "hands": 11, "cost": 12210.0, "pos_pct": 6.11, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+40.0%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "81.9%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.325", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告"], "score": 0.7947485977896518, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -28.3%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 54%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002639": {"code": "002639", "ts": "2026-09-03 01:13:36", "name": "", "bars": 400, "factors": {"price": 13.27, "r20": 3.11, "r60": -12.0, "r250": 13.81, "mom_12_1": 10.38, "vol60": 50.6, "cmf20": 0.171, "high250": 29.21, "pct_from_high": 45.4}, "exec": {"price": 13.27, "max_price": 120.0, "lot_amount": 1327.0, "budget": 13000.0, "hands": 9, "cost": 11943.0, "pos_pct": 5.97, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+3.1%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "45.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.171", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "韭研公社"], "score": 0.783092462736351, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": false, "n": 0, "titles": []}, "executable": true, "score": 3, "verdict": "值得关注", "verdict_color": "green", "reasons": ["三道不追高闸门全过（不追高）", "情绪共振：3 个数据源同时点名"], "risks": ["年化波动 51%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "000550": {"code": "000550", "ts": "2026-09-03 01:13:45", "name": "", "bars": 400, "factors": {"price": 16.6, "r20": -0.78, "r60": 3.56, "r250": -17.37, "mom_12_1": -16.72, "vol60": 29.08, "cmf20": 0.005, "high250": 21.74, "pct_from_high": 76.4}, "exec": {"price": 16.6, "max_price": 120.0, "lot_amount": 1660.0, "budget": 13000.0, "hands": 7, "cost": 11620.0, "pos_pct": 5.81, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-0.8%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "76.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.005", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": ["股吧", "公告", "东财财经"], "score": 0.7785562497949985, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": false, "n": 0, "titles": []}, "executable": true, "score": 2, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）", "情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -16.7%，中期趋势走弱"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "603958": {"code": "603958", "ts": "2026-09-03 01:13:52", "name": "哈森股份", "bars": 400, "factors": {"price": 23.85, "r20": 66.2, "r60": 20.82, "r250": 40.29, "mom_12_1": -15.59, "vol60": 74.36, "cmf20": 0.294, "high250": 27.49, "pct_from_high": 86.8}, "exec": {"price": 23.85, "max_price": 120.0, "lot_amount": 2385.0, "budget": 13000.0, "hands": 5, "cost": 11925.0, "pos_pct": 5.96, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+66.2%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "86.8%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.294", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "韭研公社"], "score": 0.7620200538776092, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -15.6%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 74%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600828": {"code": "600828", "ts": "2026-09-03 01:14:02", "name": "", "bars": 400, "factors": {"price": 4.81, "r20": 21.46, "r60": 5.48, "r250": 13.98, "mom_12_1": -6.16, "vol60": 51.46, "cmf20": 0.305, "high250": 8.66, "pct_from_high": 55.5}, "exec": {"price": 4.81, "max_price": 120.0, "lot_amount": 481.0, "budget": 13000.0, "hands": 27, "cost": 12987.0, "pos_pct": 6.49, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+21.5%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "55.5%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.305", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告"], "score": 0.7532732991861465, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": false, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -6.2%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 51%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002909": {"code": "002909", "ts": "2026-09-03 01:14:08", "name": "集泰股份", "bars": 400, "factors": {"price": 7.28, "r20": 46.77, "r60": 29.31, "r250": 1.25, "mom_12_1": -31.02, "vol60": 48.78, "cmf20": 0.495, "high250": 8.97, "pct_from_high": 81.2}, "exec": {"price": 7.28, "max_price": 120.0, "lot_amount": 728.0, "budget": 13000.0, "hands": 17, "cost": 12376.0, "pos_pct": 6.19, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+46.8%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "81.2%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.495", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "韭研公社"], "score": 0.7479856496122136, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -31.0%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "603207": {"code": "603207", "ts": "2026-09-03 01:14:16", "name": "小方制药", "bars": 400, "factors": {"price": 27.94, "r20": 24.18, "r60": 28.17, "r250": -18.38, "mom_12_1": -34.27, "vol60": 46.27, "cmf20": 0.168, "high250": 35.62, "pct_from_high": 78.4}, "exec": {"price": 27.94, "max_price": 120.0, "lot_amount": 2794.0, "budget": 13000.0, "hands": 4, "cost": 11176.0, "pos_pct": 5.59, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+24.2%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "78.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.168", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告"], "score": 0.7370485177687063, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -34.3%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002300": {"code": "002300", "ts": "2026-09-03 01:14:24", "name": "太阳电缆", "bars": 400, "factors": {"price": 7.63, "r20": 3.25, "r60": -2.3, "r250": 17.02, "mom_12_1": 13.34, "vol60": 54.57, "cmf20": 0.157, "high250": 12.8, "pct_from_high": 59.6}, "exec": {"price": 7.63, "max_price": 120.0, "lot_amount": 763.0, "budget": 13000.0, "hands": 17, "cost": 12971.0, "pos_pct": 6.49, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+3.2%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "59.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.157", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "韭研公社"], "score": 0.7206605354151071, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 3, "verdict": "值得关注", "verdict_color": "green", "reasons": ["三道不追高闸门全过（不追高）", "情绪共振：3 个数据源同时点名"], "risks": ["年化波动 55%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600150": {"code": "600150", "ts": "2026-09-03 01:14:31", "name": "中国船舶", "bars": 400, "factors": {"price": 33.93, "r20": -3.61, "r60": -0.96, "r250": -6.55, "mom_12_1": -3.06, "vol60": 39.02, "cmf20": -0.122, "high250": 42.93, "pct_from_high": 79.0}, "exec": {"price": 33.93, "max_price": 120.0, "lot_amount": 3393.0, "budget": 13000.0, "hands": 3, "cost": 10179.0, "pos_pct": 5.09, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-3.6%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "79.0%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "-0.122", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": ["股吧", "公告", "东财财经"], "score": 0.7065100717121978, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流出前列", "股票简称": "中国船舶", "最新价": 33.93, "涨跌幅": "-1.45%", "净额": "-5.08亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 1, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）", "情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -3.1%，中期趋势走弱", "主力资金流出前列"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600830": {"code": "600830", "ts": "2026-09-03 01:14:39", "name": "香溢融通", "bars": 400, "factors": {"price": 10.15, "r20": 25.93, "r60": 26.56, "r250": -8.89, "mom_12_1": -27.65, "vol60": 39.08, "cmf20": 0.627, "high250": 11.28, "pct_from_high": 90.0}, "exec": {"price": 10.15, "max_price": 120.0, "lot_amount": 1015.0, "budget": 13000.0, "hands": 12, "cost": 12180.0, "pos_pct": 6.09, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+25.9%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "90.0%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.627", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告"], "score": 0.704683069116709, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -27.6%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601566": {"code": "601566", "ts": "2026-09-03 01:14:47", "name": "九牧王", "bars": 400, "factors": {"price": 10.36, "r20": 23.33, "r60": -3.45, "r250": 15.37, "mom_12_1": -6.46, "vol60": 45.75, "cmf20": 0.49, "high250": 17.91, "pct_from_high": 57.8}, "exec": {"price": 10.36, "max_price": 120.0, "lot_amount": 1036.0, "budget": 13000.0, "hands": 12, "cost": 12432.0, "pos_pct": 6.22, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+23.3%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "57.8%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.490", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "公告"], "score": 0.7029457295734551, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["情绪共振：3 个数据源同时点名"], "risks": ["12-1 动量 -6.5%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "300857": {"code": "300857", "ts": "2026-09-03 01:14:55", "name": "协创数据", "bars": 400, "factors": {"price": 262.05, "r20": 4.05, "r60": 18.31, "r250": 287.08, "mom_12_1": 272.02, "vol60": 96.93, "cmf20": 0.069, "high250": 355.55, "pct_from_high": 73.7}, "exec": {"price": 262.05, "max_price": 120.0, "lot_amount": 26205.0, "budget": 13000.0, "hands": 0, "cost": 0.0, "pos_pct": 0.0, "ok": false, "reason": "股价 262.05 元 > 上限 120.0 元，1 手需 26,205 元，占本金 13.1%"}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+4.0%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "73.7%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.069", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "协创数据", "最新价": 262.05, "涨跌幅": "2.97%", "净额": "8.43亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": false, "score": -3, "verdict": "不可执行", "verdict_color": "red", "reasons": ["12-1 动量 +272.0%，中期趋势向上", "三道不追高闸门全过（不追高）", "主力资金流入前列"], "risks": ["不可执行：股价 262.05 元 > 上限 120.0 元，1 手需 26,205 元，占本金 13.1%", "年化波动 97%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "300476": {"code": "300476", "ts": "2026-09-03 01:15:03", "name": "胜宏科技", "bars": 400, "factors": {"price": 225.18, "r20": -4.73, "r60": -34.26, "r250": 4.85, "mom_12_1": 10.05, "vol60": 90.04, "cmf20": 0.04, "high250": 402.6, "pct_from_high": 55.9}, "exec": {"price": 225.18, "max_price": 120.0, "lot_amount": 22518.0, "budget": 13000.0, "hands": 0, "cost": 0.0, "pos_pct": 0.0, "ok": false, "reason": "股价 225.18 元 > 上限 120.0 元，1 手需 22,518 元，占本金 11.3%"}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-4.7%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "55.9%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.040", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "胜宏科技", "最新价": 225.18, "涨跌幅": "-3.35%", "净额": "5.53亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": false, "score": -3, "verdict": "不可执行", "verdict_color": "red", "reasons": ["三道不追高闸门全过（不追高）", "主力资金流入前列"], "risks": ["不可执行：股价 225.18 元 > 上限 120.0 元，1 手需 22,518 元，占本金 11.3%", "年化波动 90%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "300757": {"code": "300757", "ts": "2026-09-03 01:15:10", "name": "罗博特科", "bars": 400, "factors": {"price": 582.7, "r20": 22.67, "r60": -7.07, "r250": 173.36, "mom_12_1": 122.84, "vol60": 98.23, "cmf20": 0.073, "high250": 714.0, "pct_from_high": 81.6}, "exec": {"price": 582.7, "max_price": 120.0, "lot_amount": 58270.0, "budget": 13000.0, "hands": 0, "cost": 0.0, "pos_pct": 0.0, "ok": false, "reason": "股价 582.7 元 > 上限 120.0 元，1 手需 58,270 元，占本金 29.1%"}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+22.7%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "81.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.073", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "罗博特科", "最新价": 582.7, "涨跌幅": "3.59%", "净额": "4.72亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": false, "score": -3, "verdict": "不可执行", "verdict_color": "red", "reasons": ["12-1 动量 +122.8%，中期趋势向上", "主力资金流入前列"], "risks": ["不可执行：股价 582.7 元 > 上限 120.0 元，1 手需 58,270 元，占本金 29.1%", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 98%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600900": {"code": "600900", "ts": "2026-09-03 01:15:18", "name": "长江电力", "bars": 400, "factors": {"price": 28.72, "r20": 3.46, "r60": 6.92, "r250": 6.92, "mom_12_1": 3.35, "vol60": 19.32, "cmf20": 0.326, "high250": 29.57, "pct_from_high": 97.1}, "exec": {"price": 28.72, "max_price": 120.0, "lot_amount": 2872.0, "budget": 13000.0, "hands": 4, "cost": 11488.0, "pos_pct": 5.74, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+3.5%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "97.1%", "limit": "95%", "pass": false}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.326", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "长江电力", "最新价": 28.72, "涨跌幅": "1.13%", "净额": "4.55亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -1, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["主力资金流入前列"], "risks": ["未过闸门：现价 ≤ 52周高点的 95%", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002371": {"code": "002371", "ts": "2026-09-03 01:15:25", "name": "北方华创", "bars": 400, "factors": {"price": 667.0, "r20": -9.15, "r60": 8.18, "r250": 84.94, "mom_12_1": 103.58, "vol60": 66.69, "cmf20": -0.013, "high250": 967.12, "pct_from_high": 69.0}, "exec": {"price": 667.0, "max_price": 120.0, "lot_amount": 66700.0, "budget": 13000.0, "hands": 0, "cost": 0.0, "pos_pct": 0.0, "ok": false, "reason": "股价 667.0 元 > 上限 120.0 元，1 手需 66,700 元，占本金 33.4%"}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-9.2%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "69.0%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "-0.013", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "北方华创", "最新价": 667.0, "涨跌幅": "-0.10%", "净额": "3.74亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": false, "score": -3, "verdict": "不可执行", "verdict_color": "red", "reasons": ["12-1 动量 +103.6%，中期趋势向上", "三道不追高闸门全过（不追高）", "主力资金流入前列"], "risks": ["不可执行：股价 667.0 元 > 上限 120.0 元，1 手需 66,700 元，占本金 33.4%", "年化波动 67%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600941": {"code": "600941", "ts": "2026-09-03 01:15:33", "name": "中国移动", "bars": 400, "factors": {"price": 100.8, "r20": 5.01, "r60": 5.15, "r250": -3.25, "mom_12_1": -7.87, "vol60": 18.87, "cmf20": 0.321, "high250": 107.2, "pct_from_high": 94.0}, "exec": {"price": 100.8, "max_price": 120.0, "lot_amount": 10080.0, "budget": 13000.0, "hands": 1, "cost": 10080.0, "pos_pct": 5.04, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+5.0%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "94.0%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.321", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "中国移动", "最新价": 100.8, "涨跌幅": "0.91%", "净额": "3.62亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 2, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）", "主力资金流入前列"], "risks": ["12-1 动量 -7.9%，中期趋势走弱", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601398": {"code": "601398", "ts": "2026-09-03 01:15:41", "name": "工商银行", "bars": 400, "factors": {"price": 8.22, "r20": 9.31, "r60": 9.02, "r250": 12.6, "mom_12_1": 3.01, "vol60": 24.48, "cmf20": 0.346, "high250": 8.29, "pct_from_high": 99.2}, "exec": {"price": 8.22, "max_price": 120.0, "lot_amount": 822.0, "budget": 13000.0, "hands": 15, "cost": 12330.0, "pos_pct": 6.17, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+9.3%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "99.2%", "limit": "95%", "pass": false}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.346", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "工商银行", "最新价": 8.22, "涨跌幅": "0.86%", "净额": "3.59亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -1, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["主力资金流入前列"], "risks": ["未过闸门：现价 ≤ 52周高点的 95%", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601985": {"code": "601985", "ts": "2026-09-03 01:15:48", "name": "中国核电", "bars": 400, "factors": {"price": 9.0, "r20": 2.04, "r60": 1.01, "r250": 0.22, "mom_12_1": -1.78, "vol60": 16.15, "cmf20": 0.375, "high250": 9.41, "pct_from_high": 95.6}, "exec": {"price": 9.0, "max_price": 120.0, "lot_amount": 900.0, "budget": 13000.0, "hands": 14, "cost": 12600.0, "pos_pct": 6.3, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+2.0%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "95.6%", "limit": "95%", "pass": false}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.375", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "中国核电", "最新价": 9.0, "涨跌幅": "1.69%", "净额": "3.45亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["主力资金流入前列"], "risks": ["12-1 动量 -1.8%，中期趋势走弱", "未过闸门：现价 ≤ 52周高点的 95%", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "603618": {"code": "603618", "ts": "2026-09-03 01:15:56", "name": "杭电股份", "bars": 400, "factors": {"price": 37.22, "r20": 41.95, "r60": -9.77, "r250": 452.23, "mom_12_1": 289.02, "vol60": 99.16, "cmf20": 0.09, "high250": 57.21, "pct_from_high": 65.1}, "exec": {"price": 37.22, "max_price": 120.0, "lot_amount": 3722.0, "budget": 13000.0, "hands": 3, "cost": 11166.0, "pos_pct": 5.58, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+42.0%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "65.1%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.090", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "韭研公社"], "score": 0.6765643603179696, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "杭电股份", "最新价": 37.22, "涨跌幅": "9.99%", "净额": "2.95亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 2, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["12-1 动量 +289.0%，中期趋势向上", "情绪共振：3 个数据源同时点名", "主力资金流入前列"], "risks": ["未过闸门：近20日涨幅 ≤ +15%", "年化波动 99%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "000725": {"code": "000725", "ts": "2026-09-03 01:16:04", "name": "京东方Ａ", "bars": 400, "factors": {"price": 5.79, "r20": -3.02, "r60": -10.51, "r250": 44.39, "mom_12_1": 48.88, "vol60": 76.55, "cmf20": 0.116, "high250": 9.5, "pct_from_high": 60.9}, "exec": {"price": 5.79, "max_price": 120.0, "lot_amount": 579.0, "budget": 13000.0, "hands": 22, "cost": 12738.0, "pos_pct": 6.37, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-3.0%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "60.9%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.116", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流出前列", "股票简称": "京东方A", "最新价": 5.79, "涨跌幅": "-2.03%", "净额": "-12.05亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 3, "verdict": "值得关注", "verdict_color": "green", "reasons": ["12-1 动量 +48.9%，中期趋势向上", "三道不追高闸门全过（不追高）"], "risks": ["年化波动 77%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）", "主力资金流出前列"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "300059": {"code": "300059", "ts": "2026-09-03 01:16:12", "name": "东方财富", "bars": 400, "factors": {"price": 18.91, "r20": -7.12, "r60": 5.76, "r250": -29.1, "mom_12_1": -23.66, "vol60": 41.82, "cmf20": -0.114, "high250": 29.21, "pct_from_high": 64.7}, "exec": {"price": 18.91, "max_price": 120.0, "lot_amount": 1891.0, "budget": 13000.0, "hands": 6, "cost": 11346.0, "pos_pct": 5.67, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-7.1%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "64.7%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "-0.114", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流出前列", "股票简称": "东方财富", "最新价": 18.91, "涨跌幅": "-2.53%", "净额": "-10.79亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 0, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）"], "risks": ["12-1 动量 -23.7%，中期趋势走弱", "情绪热度：14 路数据源无一命中（冷门股）", "主力资金流出前列"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "000063": {"code": "000063", "ts": "2026-09-03 01:16:20", "name": "中兴通讯", "bars": 400, "factors": {"price": 33.49, "r20": -3.6, "r60": -13.4, "r250": -20.36, "mom_12_1": -17.38, "vol60": 50.89, "cmf20": -0.013, "high250": 55.18, "pct_from_high": 60.7}, "exec": {"price": 33.49, "max_price": 120.0, "lot_amount": 3349.0, "budget": 13000.0, "hands": 3, "cost": 10047.0, "pos_pct": 5.02, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-3.6%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "60.7%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "-0.013", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流出前列", "股票简称": "中兴通讯", "最新价": 33.49, "涨跌幅": "-2.30%", "净额": "-8.84亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 0, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）"], "risks": ["12-1 动量 -17.4%，中期趋势走弱", "年化波动 51%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）", "主力资金流出前列"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601288": {"code": "601288", "ts": "2026-09-03 01:16:28", "name": "农业银行", "bars": 400, "factors": {"price": 7.06, "r20": 8.95, "r60": 6.97, "r250": 1.15, "mom_12_1": -7.16, "vol60": 27.04, "cmf20": 0.379, "high250": 8.38, "pct_from_high": 84.2}, "exec": {"price": 7.06, "max_price": 120.0, "lot_amount": 706.0, "budget": 13000.0, "hands": 18, "cost": 12708.0, "pos_pct": 6.35, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+8.9%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "84.2%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.379", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 1, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）"], "risks": ["12-1 动量 -7.2%，中期趋势走弱", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600016": {"code": "600016", "ts": "2026-09-03 01:16:35", "name": "民生银行", "bars": 400, "factors": {"price": 3.6, "r20": 2.27, "r60": 3.45, "r250": -20.7, "mom_12_1": -22.47, "vol60": 20.93, "cmf20": 0.121, "high250": 4.58, "pct_from_high": 78.6}, "exec": {"price": 3.6, "max_price": 120.0, "lot_amount": 360.0, "budget": 13000.0, "hands": 36, "cost": 12960.0, "pos_pct": 6.48, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+2.3%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "78.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.121", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 1, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）"], "risks": ["12-1 动量 -22.5%，中期趋势走弱", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601166": {"code": "601166", "ts": "2026-09-03 01:16:43", "name": "兴业银行", "bars": 400, "factors": {"price": 17.9, "r20": -2.51, "r60": -0.33, "r250": -16.24, "mom_12_1": -14.09, "vol60": 23.61, "cmf20": 0.006, "high250": 21.77, "pct_from_high": 82.2}, "exec": {"price": 17.9, "max_price": 120.0, "lot_amount": 1790.0, "budget": 13000.0, "hands": 7, "cost": 12530.0, "pos_pct": 6.26, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-2.5%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "82.2%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.006", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 1, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）"], "risks": ["12-1 动量 -14.1%，中期趋势走弱", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601872": {"code": "601872", "ts": "2026-09-03 01:16:51", "name": "招商轮船", "bars": 400, "factors": {"price": 17.81, "r20": -1.6, "r60": 26.04, "r250": 193.89, "mom_12_1": 198.68, "vol60": 70.74, "cmf20": -0.104, "high250": 21.82, "pct_from_high": 81.6}, "exec": {"price": 17.81, "max_price": 120.0, "lot_amount": 1781.0, "budget": 13000.0, "hands": 7, "cost": 12467.0, "pos_pct": 6.23, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-1.6%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "81.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "-0.104", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 4, "verdict": "值得关注", "verdict_color": "green", "reasons": ["12-1 动量 +198.7%，中期趋势向上", "三道不追高闸门全过（不追高）"], "risks": ["年化波动 71%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600547": {"code": "600547", "ts": "2026-09-03 01:16:58", "name": "山东黄金", "bars": 400, "factors": {"price": 37.89, "r20": 31.24, "r60": 40.23, "r250": 25.92, "mom_12_1": -4.05, "vol60": 58.63, "cmf20": 0.147, "high250": 64.89, "pct_from_high": 58.4}, "exec": {"price": 37.89, "max_price": 120.0, "lot_amount": 3789.0, "budget": 13000.0, "hands": 3, "cost": 11367.0, "pos_pct": 5.68, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+31.2%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "58.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.147", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "流入前列", "股票简称": "山东黄金", "最新价": 37.89, "涨跌幅": "2.71%", "净额": "2.58亿"}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": ["主力资金流入前列"], "risks": ["12-1 动量 -4.0%，中期趋势走弱", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 59%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002837": {"code": "002837", "ts": "2026-09-03 01:17:06", "name": "英维克", "bars": 400, "factors": {"price": 66.23, "r20": 26.56, "r60": -5.01, "r250": 33.53, "mom_12_1": 5.5, "vol60": 78.43, "cmf20": 0.216, "high250": 93.47, "pct_from_high": 70.9}, "exec": {"price": 66.23, "max_price": 120.0, "lot_amount": 6623.0, "budget": 13000.0, "hands": 1, "cost": 6623.0, "pos_pct": 3.31, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+26.6%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "70.9%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.216", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": -2, "verdict": "倾向回避", "verdict_color": "red", "reasons": [], "risks": ["未过闸门：近20日涨幅 ≤ +15%", "年化波动 78%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600183": {"code": "600183", "ts": "2026-09-03 01:17:14", "name": "生益科技", "bars": 400, "factors": {"price": 144.98, "r20": 18.07, "r60": -1.69, "r250": 230.33, "mom_12_1": 179.77, "vol60": 93.82, "cmf20": 0.029, "high250": 191.88, "pct_from_high": 75.6}, "exec": {"price": 144.98, "max_price": 120.0, "lot_amount": 14498.0, "budget": 13000.0, "hands": 0, "cost": 0.0, "pos_pct": 0.0, "ok": false, "reason": "股价 144.98 元 > 上限 120.0 元，1 手需 14,498 元，占本金 7.2%"}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+18.1%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "75.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.029", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": ["股吧", "人气榜", "韭研公社"], "score": 0.4429726385260553, "nsrc": 3, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": false, "score": -3, "verdict": "不可执行", "verdict_color": "red", "reasons": ["12-1 动量 +179.8%，中期趋势向上", "情绪共振：3 个数据源同时点名"], "risks": ["不可执行：股价 144.98 元 > 上限 120.0 元，1 手需 14,498 元，占本金 7.2%", "未过闸门：近20日涨幅 ≤ +15%", "年化波动 94%，波动偏大"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "000301": {"code": "000301", "ts": "2026-09-03 01:17:22", "name": "东方盛虹", "bars": 400, "factors": {"price": 13.81, "r20": 9.69, "r60": 18.24, "r250": 47.54, "mom_12_1": 34.51, "vol60": 58.36, "cmf20": 0.1, "high250": 14.95, "pct_from_high": 92.4}, "exec": {"price": 13.81, "max_price": 120.0, "lot_amount": 1381.0, "budget": 13000.0, "hands": 9, "cost": 12429.0, "pos_pct": 6.21, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+9.7%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "92.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.100", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 4, "verdict": "值得关注", "verdict_color": "green", "reasons": ["12-1 动量 +34.5%，中期趋势向上", "三道不追高闸门全过（不追高）"], "risks": ["年化波动 58%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600489": {"code": "600489", "ts": "2026-09-03 01:17:30", "name": "中金黄金", "bars": 400, "factors": {"price": 24.7, "r20": 3.69, "r60": 19.38, "r250": 73.21, "mom_12_1": 67.04, "vol60": 57.28, "cmf20": 0.059, "high250": 40.74, "pct_from_high": 60.6}, "exec": {"price": 24.7, "max_price": 120.0, "lot_amount": 2470.0, "budget": 13000.0, "hands": 5, "cost": 12350.0, "pos_pct": 6.17, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+3.7%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "60.6%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.059", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 4, "verdict": "值得关注", "verdict_color": "green", "reasons": ["12-1 动量 +67.0%，中期趋势向上", "三道不追高闸门全过（不追高）"], "risks": ["年化波动 57%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "601898": {"code": "601898", "ts": "2026-09-03 01:17:37", "name": "中煤能源", "bars": 400, "factors": {"price": 15.01, "r20": 14.14, "r60": -6.48, "r250": 29.73, "mom_12_1": 13.66, "vol60": 49.02, "cmf20": 0.182, "high250": 19.49, "pct_from_high": 77.0}, "exec": {"price": 15.01, "max_price": 120.0, "lot_amount": 1501.0, "budget": 13000.0, "hands": 8, "cost": 12008.0, "pos_pct": 6.0, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+14.1%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "77.0%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.182", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 2, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["三道不追高闸门全过（不追高）"], "risks": ["情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "600362": {"code": "600362", "ts": "2026-09-03 01:17:45", "name": "江西铜业", "bars": 400, "factors": {"price": 46.55, "r20": -0.17, "r60": 14.18, "r250": 93.72, "mom_12_1": 94.05, "vol60": 72.45, "cmf20": 0.06, "high250": 69.69, "pct_from_high": 66.8}, "exec": {"price": 46.55, "max_price": 120.0, "lot_amount": 4655.0, "budget": 13000.0, "hands": 2, "cost": 9310.0, "pos_pct": 4.66, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "-0.2%", "limit": "+15%", "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": "66.8%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.060", "limit": "−0.15", "pass": true}], "all_pass": true}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 4, "verdict": "值得关注", "verdict_color": "green", "reasons": ["12-1 动量 +94.0%，中期趋势向上", "三道不追高闸门全过（不追高）"], "risks": ["年化波动 72%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}, "002493": {"code": "002493", "ts": "2026-09-03 01:17:53", "name": "荣盛石化", "bars": 400, "factors": {"price": 14.36, "r20": 15.9, "r60": 29.25, "r250": 44.47, "mom_12_1": 24.65, "vol60": 51.5, "cmf20": 0.107, "high250": 16.24, "pct_from_high": 88.4}, "exec": {"price": 14.36, "max_price": 120.0, "lot_amount": 1436.0, "budget": 13000.0, "hands": 9, "cost": 12924.0, "pos_pct": 6.46, "ok": true, "reason": null}, "gates": {"gates": [{"name": "近20日涨幅 ≤ +15%", "value": "+15.9%", "limit": "+15%", "pass": false}, {"name": "现价 ≤ 52周高点的 95%", "value": "88.4%", "limit": "95%", "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": "+0.107", "limit": "−0.15", "pass": true}], "all_pass": false}, "sentiment": {"ok": true, "hits": [], "score": null, "nsrc": 0, "ts": "2026-09-03 01:01:38"}, "fund": {"ok": true, "side": "未进前20", "净额": null}, "news": {"ok": true, "n": 0, "titles": []}, "executable": true, "score": 0, "verdict": "中性观望", "verdict_color": "amber", "reasons": ["12-1 动量 +24.6%，中期趋势向上"], "risks": ["未过闸门：近20日涨幅 ≤ +15%", "年化波动 52%，波动偏大", "情绪热度：14 路数据源无一命中（冷门股）"], "caveat": "本判定为规则打分的结果，非投资建议。回测区间偏牛，B vs A 方案 P(更优)=86.9%，未达 95% 统计显著。"}};
+window.__SIGNAL__    = {"rebalance": {"sig_date": "2026-09-04", "stocks_rebalance_day": false, "etf_rebalance_day": false, "next_stock_rebalance": "2026-10-08", "next_etf_rebalance": "2026-10-08"}, "changes": {"is_stock_rebalance_day": false, "is_etf_rebalance_day": false, "next_stock_rebalance": "2026-10-08", "next_etf_rebalance": "2026-10-08", "add": ["300408", "301526", "600176", "601138"], "remove": ["600016", "601166", "601288"], "keep": ["601899"], "action": "维持上期持仓，不换股"}, "data_freshness": {"bar_date": "2026-09-03", "expected_bar_date": "2026-09-03", "stale": false, "bars_behind": 0}, "positions": {"601288": {"name": "农业银行", "leg": "防御仓", "lots": 0, "cost": null, "entry_date": "2026-09-02", "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"}, "600016": {"name": "民生银行", "leg": "防御仓", "lots": 0, "cost": null, "entry_date": "2026-09-02", "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"}, "601166": {"name": "兴业银行", "leg": "防御仓", "lots": 0, "cost": null, "entry_date": "2026-09-02", "source": "09-02 信号 seed（原始 exec_engine.py 不在本沙箱，成本价与手数未记录，首次扫描前需人工补录）"}, "601899": {"name": "紫金矿业", "cost": 33.35, "lots": 3}}, "stop_loss_scan": [{"code": "601899", "name": "紫金矿业", "leg": "", "cost": 33.35, "price": 33.31, "lots": 3, "pnl_pct": -0.12, "hit_stop": false}], "sig_date": "2026-09-04", "bar_date": "2026-09-03", "generated_at": "2026-09-04 08:54:05", "capital": 200000.0, "config": {"defense": "4 只 × 6.5% = 26.0%", "hot": "1 只 × 4.0% = 4.0%", "etf": "12 只合计 57.99999999999999%", "max_price": 120.0, "stop_loss": -0.25, "pool": "591 只（沪深300 + 中证500，已过滤）"}, "picks": [{"leg": "防御仓", "code": "601899", "name": "紫金矿业", "score": 1.132, "price": 33.31, "shares": 300, "lots": 3, "amount": 10002.99, "fee": 5.0, "cost": 10007.99, "budget": 13000.0, "px": 33.3433, "weight_actual": 5.0, "why": "修正六因子 +1.132", "detail": {"z_bp": -0.759, "z_size": 2.24, "z_mom": 1.497, "z_rev": 0.113, "z_vol": -0.611, "z_liq": 4.312}}, {"leg": "防御仓", "code": "600176", "name": "中国巨石", "score": 0.927, "price": 42.63, "shares": 300, "lots": 3, "amount": 12801.79, "fee": 5.0, "cost": 12806.79, "budget": 13000.0, "px": 42.6726, "weight_actual": 6.4, "why": "修正六因子 +0.927", "detail": {"z_bp": -0.791, "z_size": 0.39, "z_mom": 5.175, "z_rev": -1.151, "z_vol": -3.18, "z_liq": 5.121}}, {"leg": "防御仓", "code": "300408", "name": "三环集团", "score": 0.92, "price": 110.91, "shares": 100, "lots": 1, "amount": 11102.09, "fee": 5.0, "cost": 11107.09, "budget": 13000.0, "px": 111.0209, "weight_actual": 5.55, "why": "修正六因子 +0.920", "detail": {"z_bp": -0.931, "z_size": 0.683, "z_mom": 4.035, "z_rev": 1.74, "z_vol": -3.164, "z_liq": 3.156}}, {"leg": "防御仓", "code": "601138", "name": "工业富联", "score": 0.873, "price": 63.2, "shares": 200, "lots": 2, "amount": 12652.64, "fee": 5.0, "cost": 12657.64, "budget": 13000.0, "px": 63.2632, "weight_actual": 6.33, "why": "修正六因子 +0.873", "detail": {"z_bp": -0.873, "z_size": 2.631, "z_mom": 0.765, "z_rev": 0.511, "z_vol": -1.362, "z_liq": 3.566}}, {"leg": "热点仓", "code": "301526", "name": "国际复材", "score": 345.64, "price": 27.32, "shares": 200, "lots": 2, "amount": 5469.46, "fee": 5.0, "cost": 5474.46, "budget": 8000.0, "px": 27.3473, "weight_actual": 2.74, "why": "12-1 动量 +345.6%，三道闸门全过", "detail": {"r20": -22.39, "pct_from_high": 50.5, "cmf20": -0.051}}], "etfs": [{"leg": "ETF腿", "code": "512040", "name": "价值ETF富国", "sector": "宽基价值", "price": 1.218, "shares": 7900, "lots": 79, "amount": 9631.82, "fee": 5.0, "cost": 9636.82, "budget": 9666.67, "px": 1.2192, "weight_actual": 4.82}, {"leg": "ETF腿", "code": "512890", "name": "红利低波ETF华泰柏瑞", "sector": "红利", "price": 1.2, "shares": 8000, "lots": 80, "amount": 9609.6, "fee": 5.0, "cost": 9614.6, "budget": 9666.67, "px": 1.2012, "weight_actual": 4.81}, {"leg": "ETF腿", "code": "510880", "name": "红利ETF华泰柏瑞", "sector": "红利", "price": 3.436, "shares": 2800, "lots": 28, "amount": 9630.42, "fee": 5.0, "cost": 9635.42, "budget": 9666.67, "px": 3.4394, "weight_actual": 4.82}, {"leg": "ETF腿", "code": "512530", "name": "沪深300红利ETF建信", "sector": "红利", "price": 1.66, "shares": 5800, "lots": 58, "amount": 9637.63, "fee": 5.0, "cost": 9642.63, "budget": 9666.67, "px": 1.6617, "weight_actual": 4.82}, {"leg": "ETF腿", "code": "510030", "name": "价值ETF华宝", "sector": "宽基价值", "price": 1.089, "shares": 8800, "lots": 88, "amount": 9592.78, "fee": 5.0, "cost": 9597.78, "budget": 9666.67, "px": 1.0901, "weight_actual": 4.8}, {"leg": "ETF腿", "code": "512390", "name": "中国低波ETF平安", "sector": "宽基价值", "price": 1.227, "shares": 7800, "lots": 78, "amount": 9580.17, "fee": 5.0, "cost": 9585.17, "budget": 9666.67, "px": 1.2282, "weight_actual": 4.79}, {"leg": "ETF腿", "code": "512750", "name": "基本面50ETF嘉实", "sector": "宽基价值", "price": 1.461, "shares": 6600, "lots": 66, "amount": 9652.24, "fee": 5.0, "cost": 9657.24, "budget": 9666.67, "px": 1.4625, "weight_actual": 4.83}, {"leg": "ETF腿", "code": "510010", "name": "180治理ETF交银", "sector": "宽基价值", "price": 1.784, "shares": 5400, "lots": 54, "amount": 9643.23, "fee": 5.0, "cost": 9648.23, "budget": 9666.67, "px": 1.7858, "weight_actual": 4.82}, {"leg": "ETF腿", "code": "511260", "name": "十年国债ETF国泰", "sector": "国债", "price": 135.861, "shares": 100, "amount": 13599.69, "fee": 5.0, "cost": 13604.69, "budget": 9666.67, "px": 135.9969, "weight_actual": 6.8, "lots": 1, "note": "剩余现金补位 1 手（目标权重买不满最小单位）"}, {"leg": "ETF腿", "code": "511020", "name": "国债ETF平安", "sector": "国债", "price": 118.231, "shares": 100, "amount": 11834.92, "fee": 5.0, "cost": 11839.92, "budget": 9666.67, "px": 118.3492, "weight_actual": 5.92, "lots": 1, "note": "剩余现金补位 1 手（目标权重买不满最小单位）"}, {"leg": "ETF腿", "code": "159934", "name": "黄金ETF易方达", "sector": "黄金", "price": 9.51, "shares": 1000, "lots": 10, "amount": 9519.51, "fee": 5.0, "cost": 9524.51, "budget": 9666.67, "px": 9.5195, "weight_actual": 4.76}, {"leg": "ETF腿", "code": "518880", "name": "黄金ETF华安", "sector": "黄金", "price": 9.105, "shares": 1000, "lots": 10, "amount": 9114.1, "fee": 5.0, "cost": 9119.1, "budget": 9666.67, "px": 9.1141, "weight_actual": 4.56}], "hot_gates": [{"name": "近20日涨幅 ≤ +15%", "value": -22.386, "pass": true}, {"name": "现价 ≤ 52周高点的 95%", "value": 50.518, "pass": true}, {"name": "资金流 CMF(20) ≥ −0.15", "value": -0.051, "pass": true}], "summary": {"n_pick": 5, "n_etf": 12, "invested": 173160.08, "invested_pct": 86.58, "cash": 26839.92, "cash_pct": 13.42}, "defense_ranking": [{"code": "601899", "name": "紫金矿业", "score": 1.132, "price": 33.31}, {"code": "600176", "name": "中国巨石", "score": 0.927, "price": 42.63}, {"code": "300408", "name": "三环集团", "score": 0.92, "price": 110.91}, {"code": "601138", "name": "工业富联", "score": 0.873, "price": 63.2}, {"code": "601398", "name": "工商银行", "score": 0.838, "price": 8.1}, {"code": "600015", "name": "华夏银行", "score": 0.788, "price": 6.27}, {"code": "601668", "name": "中国建筑", "score": 0.772, "price": 4.37}, {"code": "600016", "name": "民生银行", "score": 0.765, "price": 3.59}, {"code": "601166", "name": "兴业银行", "score": 0.761, "price": 17.93}, {"code": "000725", "name": "京东方Ａ", "score": 0.759, "price": 5.71}, {"code": "601288", "name": "农业银行", "score": 0.726, "price": 6.89}, {"code": "603993", "name": "洛阳钼业", "score": 0.702, "price": 18.61}], "hot_ranking": [{"code": "301526", "name": "国际复材", "mom": 345.64, "gates_ok": true}, {"code": "600105", "name": "永鼎股份", "mom": 309.67, "gates_ok": true}, {"code": "600176", "name": "中国巨石", "mom": 221.94, "gates_ok": true}, {"code": "601872", "name": "招商轮船", "mom": 214.5, "gates_ok": true}, {"code": "300285", "name": "国瓷材料", "mom": 210.08, "gates_ok": true}, {"code": "000657", "name": "中钨高新", "mom": 209.4, "gates_ok": true}, {"code": "000703", "name": "恒逸石化", "mom": 188.34, "gates_ok": true}, {"code": "300390", "name": "天华新能", "mom": 186.07, "gates_ok": false}, {"code": "002008", "name": "大族激光", "mom": 180.18, "gates_ok": true}, {"code": "300408", "name": "三环集团", "mom": 174.51, "gates_ok": true}, {"code": "002407", "name": "多氟多", "mom": 157.23, "gates_ok": true}, {"code": "001203", "name": "大中矿业", "mom": 125.19, "gates_ok": true}]};
+window.__PAPER_SNAP__ = {"meta": {"init_cash": 200000.0, "created": "2026-09-04 08:54:35"}, "cash": 200000.0, "positions": {}, "trades": [], "snapshots": []};
+
+/* 离线兜底：把 /api/* 请求接到内嵌数据上 */
+const _origFetch = window.fetch;
+window.fetch = async (url, opt) => {
+  const u = String(url);
+  // file:// 下不发起真请求：浏览器会直接抛
+  // "URL scheme 'file' is not supported" 并往控制台刷一片红，
+  // 虽然 catch 后用内嵌数据兜住了，但看着就像页面坏了。离线直接用快照。
+  const offline = (location.protocol === "file:");
+  if (!offline) {
+    try {
+      const r = await _origFetch(url, opt);
+      if (r.ok) return r;
+    } catch (e) { /* 落到底下的内嵌数据兜底 */ }
+  }
+  {
+    let data;
+    if (u.includes("/api/daily_signal")) data = window.__SIGNAL__;
+    else if (u.includes("/api/positions")) data = (window.__SIGNAL__ && window.__SIGNAL__.positions) || {};
+    else if (u.includes("/api/quant"))   data = window.__QUANT__;
+    else if (u.includes("/api/sentiment")) data = window.__SENTIMENT__;
+    else if (u.includes("/api/mainfund"))  data = window.__MAINFUND__;
+    // 模拟盘故意不劫持：它需要实时行情与落盘，静态页给不了。
+    // 让 /api/paper 自然失败，前端会走 POFF() 用 __PAPER_SNAP__ 渲染只读快照。
+    else if (u.includes("/api/analyze")) {
+      const m = u.match(/code=(\d{6})/);
+      const c = m ? m[1] : "";
+      data = (window.__ANALYZE__ && window.__ANALYZE__[c]) ||
+             { error: "离线快照里没有 " + (c || "该股") + " 的分析。在线模式（server.py）可分析任意个股。" };
+    }
+    else throw e;
+    // 假 Response 必须**同时**提供 json() 和 text()。
+    // 只给 json() 时，前端 J() 里的 `await r.text()` 会抛
+    // "r.text is not a function"，信号卡片直接显示「加载失败」——
+    // 而页面其它部分照常渲染，于是「有内容、无 JS 错误」的检查全过，
+    // 唯独当日信号是空的。2026-09-04 加 text() 才补上。
+    return {
+      ok: true, status: 200,
+      json: async () => data || {},
+      text: async () => JSON.stringify(data || {})
+    };
+  }
+};
+</script>
+<!--DATA-INJECT-END-->
+
+<div class="hero">
+  <h1>最强量化大佬</h1>
+  <div class="tag">20 万本金实盘 · <b>双引擎</b>（防御仓 + 热点仓）· 数据驱动不拍脑袋</div>
+  <div class="rule">
+    三条不可协商的硬约束：① 热点仓 + 防御仓两条腿走路，个股腿绝不归零
+    ② 热点仓三道不追高闸门：20日涨幅 ≤ +15% / 距52周高 ≤ 95% / CMF(20) ≥ −0.15
+    ③ 只选实盘买得到的 A 股（剔除科创板·北交所·B股，股价 ≤ 120 元）
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab on" data-mod="m1"><span class="n">01</span>量化选股</div>
+  <div class="tab" data-mod="m2"><span class="n">02</span>热点趋势</div>
+  <div class="tab" data-mod="m3"><span class="n">03</span>个股分析</div>
+  <div class="tab" data-mod="m4"><span class="n">04</span>主力动向</div>
+  <div class="tab" data-mod="m5"><span class="n">05</span>模拟盘</div>
+</div>
+
+<!-- ══════════ 模块 1 量化选股 ══════════ -->
+<div class="mod on" id="m1">
+  <div class="mhd">量化选股</div>
+  <div class="msub">按既定量化规则选出的标的：防御仓（修正六因子）+ 热点仓（12-1 动量 + 不追高三闸门）+ ETF 腿。
+  这是唯一产生<b>实际交易指令</b>的模块。</div>
+
+  <div id="sigBox"><div class="empty">加载中…</div></div>
+
+  <div class="panel">
+    <h3>v5 定案配置与回测背景</h3>
+    <div class="note" style="margin-top:0">
+      下面是<b>定案层面的配置与回测结论</b>（快照日期见内容内标注），
+      <b>不是当日指令</b>。今天该买什么、买几手，一律以上方「当日信号」为准。
+    </div>
+    <div class="alert" style="margin-top:12px">
+      <b>这段内容里有两条失效指引，别照着做</b><br>
+      ① 它提示执行 <code>python3.11 src/daily_advisor.py --commit</code> 写入持仓账本 ——
+      但 <code>daily_advisor.py</code> <b>不在当前环境里</b>，命令跑不通。<br>
+      ② 它下方的「建仓指令」是 <b>2026-09-02 的快照</b>，其中的标的与权重已被上方当日信号取代。<br>
+      真正的持仓账本请用 <code>web/api/positions.json</code>（补录成本价即可启用止损扫描）。
+    </div>
+    <div id="quantBox" style="margin-top:16px"><div class="empty">加载中…</div></div>
+  </div>
+</div>
+
+<!-- ══════════ 模块 2 热点趋势 ══════════ -->
+<div class="mod" id="m2">
+  <div class="mhd">热点趋势 · <span id="srcTotal">12</span> 路数据源情绪共振</div>
+  <div class="msub">散户情绪 / 资金关注 / 消息热度，从 <span class="srcTotal">12</span> 路数据源实时采集。
+  <b>本模块做交叉验证与趋势判断，不单独产生买入信号</b> —— 真正的买入必须回到模块 01 过三道闸门。</div>
+
+  <div class="kpis" id="sKpi"></div>
+
+  <div class="panel">
+    <h3>数据源健康度</h3>
+    <div class="grid" id="sGrid"></div>
+    <div class="note" id="sNote"></div>
+  </div>
+
+  <div class="panel">
+    <h3>跨源共振榜（多源同时点名的票更有信号价值）</h3>
+    <div style="font-size:12px;color:#8b9199;margin-bottom:10px">
+      合成方法：每只票在<b>各源内</b>先转 0~1 排名分，再跨源<b>等权平均</b>；
+      排序按<b>命中源数优先</b>。已剔除科创板/北交所/B股与页面误抓的伪代码。
+    </div>
+    <div class="scroll"><table class="tbl" id="sRank"></table></div>
+  </div>
+</div>
+
+<!-- ══════════ 模块 3 个股分析 ══════════ -->
+<div class="mod" id="m3">
+  <div class="mhd">个股分析 · 这只票值不值得买</div>
+  <div class="msub">输入代码 → 量化因子（动量/波动/资金流）+ 三道不追高闸门 + <span class="srcTotal">12</span> 路情绪热度 +
+  主力资金 + 近期要闻，给出<b>可复核的规则打分</b>，而不是一句"看好"。</div>
+
+  <div class="search" style="margin-top:16px">
+    <input id="code" placeholder="输入 6 位 A 股代码，如 601872（招商轮船）" maxlength="6">
+    <button id="go">分析</button>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div id="aBox"><div class="empty">输入代码开始分析。所有因子值都会列出，可自行复核。</div></div>
+</div>
+
+<!-- ══════════ 模块 4 主力动向 ══════════ -->
+<div class="mod" id="m4">
+  <div class="mhd">主力与机构动向</div>
+  <div class="msub">主力资金流 / 龙虎榜机构席位 / 行业与概念资金流。
+  <b>先看下面这条实证结论再用这个模块</b>，否则容易用错地方。</div>
+
+  <div id="lhbAlert"></div>
+  <div class="kpis" id="fKpi"></div>
+
+  <div class="panel">
+    <h3>个股资金流 · 净流入前列</h3>
+    <div class="scroll"><table class="tbl" id="fIn"></table></div>
+  </div>
+  <div class="panel">
+    <h3>个股资金流 · 净流出前列</h3>
+    <div class="scroll"><table class="tbl" id="fOut"></table></div>
+  </div>
+
+  <div class="panel">
+    <h3>行业 / 概念资金流</h3>
+    <div class="scroll"><table class="tbl" id="fInd"></table></div>
+  </div>
+
+  <div class="panel">
+    <h3>龙虎榜 · 机构净买入前列</h3>
+    <div style="font-size:12px;color:#8b9199;margin-bottom:10px">
+      「上榜后 N 日」是<b>该股上榜之后真实的涨跌幅</b>，不是预测 —— 用它检验跟随主力的实际效果。
+    </div>
+    <div class="scroll"><table class="tbl" id="fLhb"></table></div>
+  </div>
+</div>
+
+
+<!-- ══════════ 模块 5 模拟盘 ══════════ -->
+<div class="mod" id="m5">
+  <div class="mhd">模拟盘 · 20 万本金随时买卖</div>
+  <div class="msub">成本口径与回测<b>完全一致</b>：整手 100 股/份 · 佣金 0.025%（最低 5 元）·
+  滑点 0.1% · 卖出印花税 0.05%（ETF 免）· 剔除科创板/北交所/B股 · 个股股价 ≤ 120 元。
+  按<b>实时价</b>撮合，盘中每刷新一次就变。</div>
+
+  <div class="kpis" id="pKpi"></div>
+  <div id="pAlert"></div>
+
+  <div class="panel">
+    <h3>下单</h3>
+    <div class="search">
+      <input id="pCode" placeholder="输入 6 位代码，如 601872（股票）或 512040（ETF）" maxlength="6">
+      <button id="pQuote">查价</button>
+    </div>
+    <div class="chips" id="pChips"></div>
+    <div id="pQuoteBox"></div>
+  </div>
+
+  <div class="panel">
+    <h3>持仓明细</h3>
+    <div class="scroll"><table class="tbl" id="pPos"></table></div>
+    <div class="pnote" id="pSector"></div>
+  </div>
+
+  <div class="panel">
+    <h3>净值曲线 vs 沪深300</h3>
+    <div id="pChart"></div>
+    <div class="pnote" id="pChartNote"></div>
+  </div>
+
+  <div class="panel">
+    <h3>板块分布</h3>
+    <div id="pSectorBar"></div>
+  </div>
+
+  <div class="panel">
+    <h3>交易流水</h3>
+    <div class="scroll"><table class="tbl" id="pTrades"></table></div>
+  </div>
+
+  <div class="panel">
+    <h3>v5 定案组合 · 一键跟单</h3>
+    <div class="pnote" id="pPlanNote">读取当日信号…</div>
+    <div class="pform">
+      <button class="btn" id="pPlan">一键跟单建仓</button>
+      <button class="btn ghost" id="pReset">清空账户重置</button>
+      <button class="btn ghost" id="pRefresh">刷新行情</button>
+    </div>
+    <div id="pPlanLog"></div>
+  </div>
+</div>
+
+<div class="foot">
+  数据源：AkShare / 东方财富 / 同花顺 / 金十 / 格隆汇 / 淘股吧 / 韭研公社<br>
+  仅供研究，不构成投资建议 · 历史回测不代表未来表现
+</div>
+
+<script>
+/* ── 模块切换 ── */
+document.querySelectorAll(".tab").forEach(t=>{
+  t.addEventListener("click",()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".mod").forEach(x=>x.classList.remove("on"));
+    t.classList.add("on");
+    document.getElementById(t.dataset.mod).classList.add("on");
+    window.scrollTo({top:0,behavior:"smooth"});
+  });
+});
+// URL ?tab=m2 支持直链
+(function(){
+  const t = new URLSearchParams(location.search).get("tab");
+  if(t){
+    const el = document.querySelector(`[data-mod="${t}"]`);
+    if(el) el.click();
+  }
+})();
+// 注意：这里必须把第二个参数 opt 透传给 fetch。
+// 原写法 `async u => (await fetch(u)).json()` 只有一个形参，于是
+// J("/api/paper/order", {method:"POST", body:...}) 的第二个实参被静默丢弃，
+// 实际发出的是 GET —— 而 /api/paper/order|plan|reset 只接受 POST，
+// 一律回 404。后果：模拟盘的买入 / 卖出 / 一键跟单 / 重置四个按钮
+// 全都点了没反应（catch 到异常但不说人话）。2026-09-03 前端交互测试才发现。
+const J = async (u, opt) => {
+  const r = await fetch(u, opt);
+  // 兼容只有 json()、没有 text() 的假 Response。
+  // 静态离线版的 fetch 劫持层历史上只实现了 json()，这里直接 r.text()
+  // 会抛 "r.text is not a function"，信号卡片显示「加载失败」，
+  // 而页面其它部分照常渲染 —— 于是「有内容、无 JS 错误」的检查全过，
+  // 唯独当日信号是空的。先试 text()，没有就退回 json()。
+  const t = (typeof r.text === "function")
+    ? await r.text()
+    : JSON.stringify(await r.json());
+  try {
+    return JSON.parse(t);
+  } catch {
+    // 服务端返回非 JSON（404 的 HTML 错误页、500 等）时，
+    // 把状态码和正文片段抛出来，别只抛一句 "Unexpected token <"
+    throw new Error(`HTTP ${r.status} ${r.statusText} — ${t.slice(0, 120)}`);
+  }
+};
+const pct = v => v==null ? "—" : (v>0?`<span class="up">+${v}%</span>`
+                :(v<0?`<span class="down">${v}%</span>`:`${v}%`));
+
+/* ── 模块1a：v5 定案配置与回测背景（静态片段，非当日指令）── */
+(async()=>{
+  try{
+    const d = await J("/api/quant");
+    const css = d.css || "", htm = d.html || "";
+    if(!htm) throw new Error("空片段");
+    document.getElementById("quantBox").innerHTML =
+      `<style>${css}</style><div id="mod-quant">${htm}</div>`;
+  }catch(e){
+    document.getElementById("quantBox").innerHTML =
+      `<div class="empty">量化选股数据未生成：${e}</div>`;
+  }
+})();
+
+/* ── 模块1b：当日信号（每天重算，页面不再挂昨天的单子）── */
+const SB = document.getElementById("sigBox");
+const n2 = v => (v==null||isNaN(v)) ? "—" : Number(v).toLocaleString("zh-CN",
+                {minimumFractionDigits:2,maximumFractionDigits:2});
+const pn = v => (v==null||isNaN(v)) ? "—" :
+  `<span class="${v>0?'up':(v<0?'down':'')}">${v>0?'+':''}${Number(v).toFixed(2)}%</span>`;
+function sigCard(t, body, cls){
+  return `<div class="panel ${cls||''}"><h3>${t}</h3>${body}</div>`;
+}
+function sigTbl(head, rows){
+  if(!rows.length) return `<div class="empty">无数据</div>`;
+  return `<div class="scroll"><table class="tbl"><thead><tr>${
+    head.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${
+    rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`;
+}
+(async()=>{
+  let d;
+  try{ d = await J("/api/daily_signal"); }
+  catch(e){
+    SB.innerHTML = `<div class="alert">信号加载失败：${e}。<br>
+      请确认 server.py 正在运行，或手动生成：<br>
+      <code>python3 web/modules/signal/daily_signal.py</code></div>`;
+    return;
+  }
+  if(d.error){
+    SB.innerHTML = `<div class="alert"><b>当日信号未生成</b><br>${d.error}<br><br>
+      <code>python3 web/modules/signal/daily_signal.py</code></div>`;
+    return;
+  }
+
+  const rb=d.rebalance||{}, ch=d.changes||{};
+  const fr=d.data_freshness||{}, st=d.summary||{};
+  const stale = d.age_min!=null && d.age_min>240;
+  const actHold = !rb.stocks_rebalance_day;
+
+  /* 头部信息条 */
+  let h = `<div class="sigHd">
+    <div><label>信号日期</label><b>${d.sig_date}</b></div>
+    <div><label>因子基准（bar_date）</label><b>${d.bar_date} 收盘</b></div>
+    <div><label>今日动作</label><b class="${actHold?'y':'g'}">${ch.action||'—'}</b></div>
+    <div><label>下次个股调仓</label><b>${rb.next_stock_rebalance||'—'}</b></div>
+    <div><label>生成于</label><b style="font-size:15px">${(d.generated_at||'').slice(11,16)}
+      <span class="sigAge ${stale?'r':''}">${d.age_min==null?'':(d.age_min<60?d.age_min+' 分钟前':(d.age_min/60).toFixed(1)+' 小时前')}</span></b></div>
+  </div>`;
+
+  /* 今天该不该动 */
+  let warn = actHold
+    ? `<div class="alert"><b>今日不是个股调仓日，维持上期持仓，不换股。</b><br>
+        个股腿按 v5 定案是<b>季频调仓</b>（1/4/7/10 月首个交易日），不是每天都换。
+        天天换手要付佣金 0.025% + 滑点 0.1% + 印花税 0.05%，
+        而 v5 的回测收益正是<b>按季频换手</b>验证出来的 ——
+        日频调仓是另一个没有回测支撑的策略，不在定案范围内。<br>
+        <b>下面的个股腿表格是本期打分结果，仅供观察，不是今天的买入指令。</b></div>`
+    : `<div class="note" style="margin-top:0"><b>今日是调仓日</b>，下方表格即为执行指令。</div>`;
+  if(ch.add?.length || ch.remove?.length){
+    warn += `<div class="note">与上期持仓差异：
+      新进 <b>${ch.add?.length||0}</b> 只${ch.add?.length?'（'+ch.add.join('、')+'）':''}，
+      调出 <b>${ch.remove?.length||0}</b> 只${ch.remove?.length?'（'+ch.remove.join('、')+'）':''}，
+      保留 <b>${ch.keep?.length||0}</b> 只。</div>`;
+  }
+  h += sigCard("今天该不该动", warn);
+
+  /* 数据新鲜度告警：bar_date 落后必须显式提示，不能让旧因子静默生效 */
+  if(fr.stale){
+    h += `<div class="alert"><b>数据源未更新</b><br>
+      因子基准 <b>${fr.bar_date}</b>，但此刻应为 <b>${fr.expected_bar_date}</b>
+      —— 数据源还没推到最新收盘。<br>
+      开盘前重跑一次即可（<code>bash web/run_daily_signal.sh</code>）。</div>`;
+  } else if((fr.bars_behind|0) >= 1){
+    h += `<div class="alert"><b>信号跨度提示</b><br>
+      因子基准 <b>${fr.bar_date}</b> 收盘，而本信号是为 <b>${d.sig_date}</b>
+      开盘准备的，中间 <b>${fr.bars_behind}</b> 个交易日的行情尚未反映在因子里。<br>
+      这是盘中/盘后出信号的必然结果，每天 8:30 自动重跑后即消除。</div>`;
+  }
+
+  /* 止损扫描 */
+  const sl = d.stop_loss_scan||[];
+  h += sl.length
+    ? sigCard(`持仓止损扫描（${(d.config.stop_loss*100).toFixed(0)}%，仅防黑天鹅）`,
+        sigTbl(["代码","名称","成本","现价","浮盈亏","触发"],
+          sl.map(s=>[`<code>${s.code}</code>`, s.name, n2(s.cost), n2(s.price),
+                     pn(s.pnl_pct), s.hit_stop?'<b class="r">触发</b>':'否'])))
+    : sigCard("持仓止损扫描",
+        `<div class="note" style="margin-top:0">
+           <b>持仓成本价未记录，无法计算浮盈亏。</b>
+           我不用昨收价当成本糊弄 —— 错误的成本会让止损线误报，比没有更危险。<br>
+           请补录实际成交价（POST <code>/api/positions</code>，如
+           <code>{"601398":{"cost":7.85,"lots":15}}</code>），或直接编辑
+           <code>web/api/positions.json</code> 后重跑。</div>`);
+
+  /* 个股腿 */
+  const pk = d.picks||[];
+  h += sigCard(`个股腿（${pk.length} 只）${actHold?' · 仅供观察':' · 执行指令'}`,
+    (actHold?`<div class="note" style="margin-top:0">非调仓日，下表<b>不是</b>今日买入指令。</div>`:"") +
+    sigTbl(["腿","代码","名称","现价","手数","金额","合计","权重","依据"],
+      pk.map(x=>[`<span class="tag ${x.leg==='热点仓'?'t-hot':'t-em'}">${x.leg}</span>`,
+                 `<code>${x.code}</code>`, x.name, n2(x.price), x.lots,
+                 n2(x.amount), n2(x.cost), (x.weight_actual||0)+"%",
+                 `<span style="color:#8b9199">${x.why}</span>`])));
+
+  /* ETF 腿 */
+  const et = d.etfs||[];
+  h += sigCard(`ETF 腿（${d.summary.n_etf} 只，月频调仓）${rb.etf_rebalance_day?'':' · 维持'}`,
+    (rb.etf_rebalance_day?"":`<div class="note" style="margin-top:0">
+        今日非 ETF 调仓日（下次 ${rb.next_etf_rebalance||'—'}），<b>维持现有 ETF 持仓</b>。</div>`) +
+    sigTbl(["代码","名称","板块","现价","手数","金额","合计","备注"],
+      et.map(x=>{
+        const note = x.error ? `<span class="r">${x.error}</span>`
+          : (x.shares? (x.note||'') : `<span class="y">1 手需 ${n2(x.price*100)} 元，超出单只预算 ${n2(x.budget)} 元</span>`);
+        return [`<code>${x.code}</code>`, x.name, x.sector, n2(x.price), x.lots??'—',
+                n2(x.amount), n2(x.cost), `<span style="color:#8b9199">${note}</span>`];
+      })) +
+    `<div style="margin-top:12px;color:#8b9199;font-size:13px">
+       合计投入 <b style="color:#fff">${n2(d.summary.invested)} 元</b>
+       （${d.summary.invested_pct}%），留现金
+       <b style="color:#fff">${n2(d.summary.cash)} 元</b>（${d.summary.cash_pct}%）</div>`);
+
+  /* 排名（并排两张卡，不套 panel） */
+  const dr=d.defense_ranking||[], hr=d.hot_ranking||[];
+  h += `<div class="two">
+    <div class="panel"><h3>防御仓 六因子 Top12</h3>${sigTbl(
+      ["#","代码","名称","六因子分","现价"],
+      dr.map((r,i)=>[i+1,`<code>${r.code}</code>`,r.name,
+        `<b>${r.score>0?'+':''}${r.score}</b>`, n2(r.price)]))}</div>
+    <div class="panel"><h3>热点仓 12-1 动量 Top12</h3>${sigTbl(
+      ["#","代码","名称","12-1动量","三闸门"],
+      hr.map((r,i)=>[i+1,`<code>${r.code}</code>`,r.name,
+        `<b>${r.mom>0?'+':''}${r.mom}%</b>`,
+        r.gates_ok?'<b class="g">✓</b>':'<b class="r">✕</b>']))}</div>
+  </div>`;
+
+  /* 三道闸门 */
+  if(d.hot_gates?.length){
+    h += sigCard("热点仓三道不追高闸门（本次判定依据）",
+      sigTbl(["闸门","实测值","结果"], d.hot_gates.map(g=>
+        [g.name, g.value==null?'—':g.value,
+         g.pass?'<b class="g">✓ 通过</b>':'<b class="r">✕ 未过</b>'])));
+  }
+  h += `<div class="note">样本池 ${d.config.pool} · 股价上限 ${d.config.max_price} 元 ·
+    已剔除科创板/北交所/B股 · 信号每交易日开盘前重算。</div>`;
+
+  SB.innerHTML = h;
+})();
+
+/* ── 模块2：情绪 ── */
+const GRP={em_comment:"em",em_hot_rank:"em",em_notice:"em",em_news:"em",
+  xq_follow:"xq",xq_tweet:"xq",xq_deal:"xq",
+  cls_news:"news",ths_news:"news",sina_news:"news",jin10:"news",
+  gelonghui:"page",taoguba:"page",jiuyangongshe:"page"};
+const GT={em:["t-em","东方财富"],xq:["t-xq","雪球"],news:["t-news","资讯电报"],page:["t-page","社区页面"]};
+(async()=>{
+  let d; try{ d = await J("/api/sentiment"); }catch(e){ return; }
+  if(!d || !d.status) return;
+  const st=d.status, names=Object.keys(st);
+  const ok=names.filter(n=>st[n].ok&&st[n].covered>0).length;
+  const weak=names.filter(n=>st[n].ok&&st[n].covered===0).length;
+  document.getElementById("sKpi").innerHTML=`
+    <div class="kpi"><label>有效产出源</label><b class="g">${ok} / ${names.length}</b></div>
+    <div class="kpi"><label>连通但空数据</label><b class="y">${weak}</b></div>
+    <div class="kpi"><label>失败</label><b class="${names.length-ok-weak?'r':'g'}">${names.length-ok-weak}</b></div>
+    <div class="kpi"><label>覆盖个股</label><b class="b">${d.meta.universe}</b></div>
+    <div class="kpi"><label>采集时间</label><b style="font-size:15px">${d.ts}</b></div>`;
+
+  document.getElementById("sGrid").innerHTML=names.map(n=>{
+    const s=st[n], [tc,gl]=GT[GRP[n]]||["t-page","社区"];
+    const cls=!s.ok?"bad":(s.covered>0?"ok":"warn");
+    const top=(d.top&&d.top[n])?Object.keys(d.top[n]).slice(0,6).map(c=>`<code>${c}</code>`).join(""):"";
+    return `<div class="card ${cls}">
+      <div class="c-hd"><span class="dot"></span><b>${s.label||n}</b></div>
+      <div class="c-meta"><span class="tag ${tc}">${gl}</span>
+        <span>${s.rows||0} 条</span><span>${s.ms||0}ms</span><span>覆盖 ${s.covered||0}</span></div>
+      ${s.error?`<div class="c-err">${s.error}</div>`:""}
+      ${top?`<div class="c-top">Top: ${top}</div>`:""}</div>`;
+  }).join("");
+
+  // 路数按实际采集的源回填，避免写死 12 与数据打架
+  const _nTot=names.length;
+  document.querySelectorAll(".srcTotal,#srcTotal").forEach(e=>e.textContent=_nTot);
+  window.__SRC_TOTAL__=_nTot;
+  const blocked=names.filter(n=>!st[n].ok);
+  // 提示文案按【实际成功的源】动态生成，避免写死后与数据打架
+  const okn=names.filter(n=>st[n].ok && st[n].covered>0);
+  const okLabel=okn.map(n=>(st[n].label||n).replace(/^.*·/,"")).join("、");
+  document.getElementById("sNote").innerHTML = blocked.length
+    ? `<b>${blocked.length} 路不可用</b>：${blocked.map(n=>st[n].label||n).join("、")}。
+       本批真正产出的是 <b>${okn.length} 路</b>：${okLabel||"（无）"}。
+       情绪面由东财 3 路（股吧/人气榜/公告）撑住，覆盖 ${Math.max(
+         st.em_comment?.covered||0, st.em_hot_rank?.covered||0, st.em_notice?.covered||0)} 只；
+       消息面改由<b>东财·全球财经</b>顶上（${st.em_news?.covered||0} 只），
+       已能替代抓不到的财联社。`
+    : "全部数据源正常。";
+
+  const m=d.merged||[];
+  document.getElementById("sRank").innerHTML = m.length ? `
+    <thead><tr><th>#</th><th>代码</th><th>合成热度</th><th>命中源数</th><th>命中的源</th></tr></thead>
+    <tbody>${m.slice(0,30).map((r,i)=>`<tr>
+      <td>${i+1}</td><td><b>${r.code}</b></td>
+      <td><b class="b">${r.score.toFixed(3)}</b></td>
+      <td><b class="${r.nsrc>=3?'y':''}">${r.nsrc}</b></td>
+      <td style="font-size:11.5px;color:#8b9199">${r.srcs.join(" · ")}</td></tr>`).join("")}
+    </tbody>` : `<tbody><tr><td class="empty">本轮无有效数据</td></tr></tbody>`;
+})();
+
+/* ── 模块3：个股分析 ── */
+const HOT=["300308", "601872", "000301", "600489", "600362", "002639", "601398", "601288", "600016"];
+document.getElementById("chips").innerHTML =
+  HOT.map(c=>`<span class="chip" data-c="${c}">${c}</span>`).join("");
+document.querySelectorAll(".chip").forEach(c=>
+  c.addEventListener("click",()=>{document.getElementById("code").value=c.dataset.c;run();}));
+document.getElementById("go").addEventListener("click",run);
+document.getElementById("code").addEventListener("keydown",e=>{if(e.key==="Enter")run();});
+// ?code=601872&tab=m3 可直接分享某只票的分析结果
+(function(){
+  const q=new URLSearchParams(location.search), c=q.get("code");
+  if(c&&/^\d{6}$/.test(c)){
+    document.getElementById("code").value=c;
+    const t=document.querySelector('[data-mod="m3"]'); if(t) t.click();
+    run();
+  }
+})();
+
+async function run(){
+  const code=document.getElementById("code").value.trim();
+  const box=document.getElementById("aBox"), btn=document.getElementById("go");
+  if(!/^\d{6}$/.test(code)){box.innerHTML=`<div class="empty">请输入 6 位数字代码</div>`;return;}
+  btn.disabled=true; btn.textContent="分析中…";
+  box.innerHTML=`<div class="empty">正在拉取行情、因子、情绪、资金流与新闻…</div>`;
+  let d; try{ d=await J("/api/analyze?code="+code); }catch(e){
+    box.innerHTML=`<div class="empty">请求失败：${e}</div>`;btn.disabled=false;btn.textContent="分析";return;}
+  btn.disabled=false; btn.textContent="分析";
+  if(d.error){box.innerHTML=`<div class="empty">${d.error}</div>`;return;}
+
+  const f=d.factors, g=d.gates, s=d.sentiment, fu=d.fund, nw=d.news;
+  const ex=d.exec||{price:f.price,max_price:120,lot_amount:(f.price||0)*100,budget:13000,hands:0,cost:0,pos_pct:0,ok:true,reason:null};
+  const vcls={green:"v-green",amber:"v-amber",red:"v-red"}[d.verdict_color];
+  box.innerHTML=`
+  <div class="verdict ${vcls}">${d.verdict==="值得关注"?"✅":d.verdict==="中性观望"?"⚠️":"⛔"} ${d.verdict}
+    <span class="s">综合打分 ${d.score>0?"+"+d.score:d.score} 分 · ${d.name||""} ${d.code}</span></div>
+
+  <div class="panel">
+    <h3>第零道闸门：可执行性（20 万本金能不能买）</h3>
+    <table class="tbl"><tbody>
+      <tr><td>最新价</td><td><b>${ex.price} 元</b></td>
+          <td>股价上限</td><td>≤ ${ex.max_price} 元 ${ex.price<=ex.max_price
+              ?'<span class="up">✓</span>':'<span class="down">✕ 超限</span>'}</td></tr>
+      <tr><td>1 手金额</td><td><b>${ex.lot_amount.toLocaleString()}</b> 元（100 股）</td>
+          <td>占本金</td><td>${(ex.lot_amount/200000*100).toFixed(1)}%</td></tr>
+      <tr><td>单只预算 6.5%</td><td>${ex.budget.toLocaleString()} 元</td>
+          <td>可买</td><td><b class="${ex.hands>0?'up':'down'}">${ex.hands} 手</b>
+              ${ex.hands>0?`（约 ${ex.cost.toLocaleString()} 元，占 ${ex.pos_pct}%）`:''}</td></tr>
+    </tbody></table>
+    ${ex.ok?`<div class="note">可执行：按单只 6.5% 仓位上限可建 <b>${ex.hands} 手</b>。</div>`
+      :`<div class="note" style="color:#ef5350"><b>不可执行</b>：${ex.reason}。
+        20 万本金下这只票买不出合规仓位，因子分再高也不进组合。</div>`}
+  </div>
+
+  <div class="panel">
+    <h3>三道不追高闸门</h3>
+    ${g.gates.map(x=>`<div class="gate ${x.pass?"pass":"fail"}">
+      <span class="ico">${x.pass?"✓":"✕"}</span>
+      <span class="nm">${x.name}</span>
+      <span class="vl">${x.value}</span>
+      <span class="lim">上限 ${x.limit}</span></div>`).join("")}
+    ${g.all_pass?"":`<div class="note">未通过闸门 → 按体系纪律，<b>热点仓不得买入</b>。
+      闸门是为防止追高接盘，实测裸动量（追高）比加闸门后持1年亏损概率高 2.3pp。</div>`}
+  </div>
+
+  <div class="panel">
+    <h3>量化因子（全部可复核）</h3>
+    <table class="tbl"><tbody>
+      <tr><td>最新价</td><td><b>${f.price}</b> 元</td>
+          <td>52周高点</td><td>${f.high250}（现价为高点 ${f.pct_from_high}%）</td></tr>
+      <tr><td>近20日涨幅</td><td>${pct(f.r20)}</td>
+          <td>近60日涨幅</td><td>${pct(f.r60)}</td></tr>
+      <tr><td>12-1 动量</td><td><b>${f.mom_12_1==null?"—":pct(f.mom_12_1)}</b></td>
+          <td>近250日涨幅</td><td>${pct(f.r250)}</td></tr>
+      <tr><td>年化波动(60日)</td><td>${f.vol60}%</td>
+          <td>资金流 CMF(20)</td><td><b>${f.cmf20==null?"—":f.cmf20}</b>（≥ −0.15 为佳）</td></tr>
+    </tbody></table>
+  </div>
+
+  <div class="reasons">
+    <div class="rbox"><h4>支持买入的信号</h4>
+      ${d.reasons.length?`<ul>${d.reasons.map(r=>`<li>${r}</li>`).join("")}</ul>`
+        :`<div style="color:#6b7280;font-size:12.5px">无</div>`}</div>
+    <div class="rbox neg"><h4>风险与减分项</h4>
+      ${d.risks.length?`<ul>${d.risks.map(r=>`<li>${r}</li>`).join("")}</ul>`
+        :`<div style="color:#6b7280;font-size:12.5px">无</div>`}</div>
+  </div>
+
+  <div class="panel" style="margin-top:18px">
+    <h3>情绪 · 资金 · 消息</h3>
+    <table class="tbl"><tbody>
+      <tr><td>情绪共振</td><td>${s.nsrc?`<b class="y">${s.nsrc} 个源点名</b>（${s.hits.join(" · ")}）`
+        :`<span style="color:#6b7280">${window.__SRC_TOTAL__||12} 路数据源无一命中（冷门股）</span>`}</td></tr>
+      <tr><td>主力资金</td><td>${fu.ok?`${fu.side}${fu.净额?` · 净额 ${fu.净额}`:""}`
+        :"数据未就绪"}</td></tr>
+      <tr><td>近期要闻</td><td>${nw.ok?(nw.n?`提及 <b>${nw.n}</b> 次${nw.titles.length?`<br><span style="color:#8b9199;font-size:12px">${nw.titles.join("<br>")}</span>`:""}`
+        :"无提及"):"未获取"}</td></tr>
+    </tbody></table>
+    <div class="note">${d.caveat}</div>
+  </div>`;
+}
+
+/* ── 模块4：主力动向 ── */
+(async()=>{
+  let d; try{ d=await J("/api/mainfund"); }catch(e){ return; }
+  if(!d||!d.lhb) return;
+  const L=d.lhb;
+  if(L.ok&&L.verdict) document.getElementById("lhbAlert").innerHTML=
+    `<div class="alert"><b>先读这条再往下看：</b>${L.verdict}</div>`;
+
+  const fu=d.fund||{};
+  document.getElementById("fKpi").innerHTML=`
+    <div class="kpi"><label>龙虎榜样本</label><b class="b">${L.n||0}</b></div>
+    <div class="kpi"><label>买入组 5日均值</label><b class="${(L.buy&&L.buy['上榜后5日']&&L.buy['上榜后5日'].mean>=0)?'g':'r'}">${
+      (L.buy&&L.buy['上榜后5日']&&L.buy['上榜后5日'].mean!=null)?L.buy['上榜后5日'].mean+"%":"—"}</b></div>
+    <div class="kpi"><label>卖出组 5日均值</label><b class="r">${
+      (L.sell&&L.sell['上榜后5日']&&L.sell['上榜后5日'].mean!=null)?L.sell['上榜后5日'].mean+"%":"—"}</b></div>
+    <div class="kpi"><label>资金流覆盖</label><b>${fu.rows||0} 只</b></div>
+    <div class="kpi"><label>采集时间</label><b style="font-size:15px">${d.ts||"—"}</b></div>`;
+
+  const rowIn = (r,i)=>`<tr><td>${i+1}</td><td><b>${r["代码"]||r["股票代码"]||""}</b></td>
+    <td>${r["股票简称"]||""}</td><td>${r["最新价"]??"—"}</td>
+    <td>${pct(typeof r["涨跌幅"]==="string"?parseFloat(r["涨跌幅"]):r["涨跌幅"])}</td>
+    <td><b>${r["净额"]??"—"}</b></td></tr>`;
+  const hd=`<thead><tr><th>#</th><th>代码</th><th>名称</th><th>最新价</th><th>涨跌幅</th><th>净额</th></tr></thead>`;
+  document.getElementById("fIn").innerHTML =
+    (fu.top_in&&fu.top_in.length)?hd+`<tbody>${fu.top_in.map(rowIn).join("")}</tbody>`
+    :`<tbody><tr><td class="empty">数据未就绪</td></tr></tbody>`;
+  document.getElementById("fOut").innerHTML =
+    (fu.top_out&&fu.top_out.length)?hd+`<tbody>${fu.top_out.map(rowIn).join("")}</tbody>`
+    :`<tbody><tr><td class="empty">数据未就绪</td></tr></tbody>`;
+
+  const sc=d.sector||{};
+  const ind=[...(sc.industry||[]),...(sc.concept||[])];
+  document.getElementById("fInd").innerHTML = ind.length?`
+    <thead><tr><th>板块</th><th>涨跌幅</th><th>净额(亿)</th><th>领涨股</th></tr></thead>
+    <tbody>${ind.map(r=>`<tr><td><b>${r["行业"]}</b></td>
+      <td>${pct(r["行业-涨跌幅"])}</td>
+      <td><b class="${(r["净额"]||0)>=0?'up':'down'}">${r["净额"]}</b></td>
+      <td>${r["领涨股"]||"—"}</td></tr>`).join("")}</tbody>`
+    :`<tbody><tr><td class="empty">数据未就绪</td></tr></tbody>`;
+
+  const rc=L.recent||[];
+  document.getElementById("fLhb").innerHTML = rc.length?`
+    <thead><tr><th>代码</th><th>名称</th><th>收盘价</th><th>涨跌幅</th>
+      <th>机构净买额</th><th>上榜后1日</th><th>上榜后5日</th></tr></thead>
+    <tbody>${rc.map(r=>`<tr><td><b>${r["代码"]}</b></td><td>${r["名称"]}</td>
+      <td>${r["收盘价"]??"—"}</td>
+      <td>${pct(typeof r["涨跌幅"]==="number"?+r["涨跌幅"].toFixed(2):r["涨跌幅"])}</td>
+      <td><b class="up">${(r["龙虎榜净买额"]/1e8).toFixed(2)} 亿</b></td>
+      <td>${pct(r["上榜后1日"]==null?null:+Number(r["上榜后1日"]).toFixed(2))}</td>
+      <td>${pct(r["上榜后5日"]==null?null:+Number(r["上榜后5日"]).toFixed(2))}</td></tr>`).join("")}</tbody>`
+    :`<tbody><tr><td class="empty">数据未就绪</td></tr></tbody>`;
+})();
+
+/* ── 模块5：模拟盘（需后端；离线只显示引导）── */
+const PN = (n, d=2) => (n==null||isNaN(n)) ? "—" : Number(n).toLocaleString("zh-CN",
+  {minimumFractionDigits:d, maximumFractionDigits:d});
+const PS = n => (n==null||isNaN(n)) ? "—" : (n>0?"+"+Number(n).toFixed(2):Number(n).toFixed(2));
+const PCLS = n => n>0?"up":(n<0?"down":"");
+const POFF = async () => {
+  const snap = window.__PAPER_SNAP__;
+  document.getElementById("pAlert").innerHTML =
+    `<div class="alert"><b>离线快照 · 只读，不能交易。</b>
+     下单要取<b>实时行情</b>、账户要落盘，静态 HTML 做不到这两件事 ——
+     与其给你一个假装在交易的界面，不如直说。<br>
+     启动后端：<code>cd web &amp;&amp; python3 server.py 8899</code>，
+     然后打开 <code>http://127.0.0.1:8899/?tab=m5</code>。
+     ${snap&&snap.meta?`<br>下面是 <b>${snap.meta.created||""}</b> 建仓时的账户快照，
+       行情停在那一瞬间，仅供参考。`:""}</div>`;
+  ["pQuoteBox","pChips"].forEach(id=>{const e=document.getElementById(id); if(e) e.innerHTML="";});
+  if(!snap||!snap.meta){
+    document.getElementById("pKpi").innerHTML =
+      `<div class="kpi"><label>账户状态</label><b class="r" style="font-size:15px">未连接后端</b></div>
+       <div class="kpi"><label>本金</label><b>200,000</b></div>`;
+    ["pPos","pTrades","pChart","pSector","pSectorBar"].forEach(id=>{
+      const e=document.getElementById(id); if(e) e.innerHTML="";});
+    return;
+  }
+  // 用快照静态估值（现价取不到就按成本价，不虚增浮盈）
+  const init=snap.meta.init_cash||200000;
+  let mv=0, cost=0;
+  const pos=Object.values(snap.positions||{}).map(p=>{
+    const px=p.avg_cost, m=px*p.shares, c=p.avg_cost*p.shares;
+    mv+=m; cost+=c;
+    return {code:p.code,name:p.name,shares:p.shares,avg_cost:p.avg_cost,price:px,
+      market_value:m,cost:c,pnl:m-c,pnl_pct:(px/p.avg_cost-1)*100,pct_today:null,
+      etf:p.etf,sector:"—"};
+  });
+  const equity=snap.cash+mv, realized=(snap.trades||[])
+    .filter(t=>t.side==="卖出").reduce((a,t)=>a+(t.pnl||0),0);
+  pRender({ts:"离线快照",cash:snap.cash,market_value:mv,equity,init_cash:init,
+    total_pnl:equity-init,total_pnl_pct:(equity/init-1)*100,float_pnl:mv-cost,
+    realized_pnl:realized,cash_weight:+(snap.cash/equity*100).toFixed(2),positions:pos,
+    sectors:[],alerts:[],trades:[...(snap.trades||[])].reverse(),
+    n_trades:(snap.trades||[]).length,snapshots:snap.snapshots||[],
+    hs300:null,base_ret:null,alpha:null,plan:[]});
+  document.getElementById("pChartNote").innerHTML =
+    `离线快照无法画净值曲线（需要每日实时快照），启动后端后自动补齐。`;
+};
+
+async function pLoad(){
+  let d;
+  try{ d = await J("/api/paper"); }
+  catch(e){ return POFF(); }
+  if(d.error){ document.getElementById("pAlert").innerHTML =
+    `<div class="alert">后端报错：${d.error}</div>`; return; }
+  pRender(d);
+}
+
+function pRender(d){
+  // KPI
+  document.getElementById("pKpi").innerHTML=`
+    <div class="kpi"><label>总权益</label><b>${PN(d.equity,0)}</b></div>
+    <div class="kpi"><label>总盈亏</label><b class="${PCLS(d.total_pnl)}">${PS(d.total_pnl)}
+      <span style="font-size:13px">(${PS(d.total_pnl_pct)}%)</span></b></div>
+    <div class="kpi"><label>浮动盈亏</label><b class="${PCLS(d.float_pnl)}">${PS(d.float_pnl)}</b></div>
+    <div class="kpi"><label>已实现盈亏</label><b class="${PCLS(d.realized_pnl)}">${PS(d.realized_pnl)}</b></div>
+    <div class="kpi"><label>可用现金</label><b>${PN(d.cash,0)}
+      <span style="font-size:12px;color:#8b9199">（${d.cash_weight==null?"—":(+d.cash_weight).toFixed(2)}%）</span></b></div>
+    <div class="kpi"><label>持仓市值</label><b>${PN(d.market_value,0)}</b></div>
+    <div class="kpi"><label>超额 vs 沪深300</label>
+      <b class="${PCLS(d.alpha)}">${d.alpha==null?"—":PS(d.alpha)+"pp"}</b></div>`;
+
+  // 风险提醒
+  const al=d.alerts||[];
+  document.getElementById("pAlert").innerHTML = al.length ? al.map(a=>{
+    const c = a.level==="high"?"#ef5350":(a.level==="mid"?"#ff9800":"#8b9199");
+    return `<div class="note" style="border-left-color:${c};margin-bottom:8px">
+      <b style="color:${c}">${a.level==="high"?"⚠ 高风险":a.level==="mid"?"⚡ 注意":"ℹ 提示"}</b>
+      ${a.code?`· ${a.code} `:""}${a.name} —— ${a.msg}</div>`;
+  }).join("") : `<div class="note" style="border-left-color:#4caf50">
+      ✅ 当前无风险提醒（单只仓位、行业集中度、止损线、现金垫均在阈值内）</div>`;
+
+  // 持仓
+  const pos=d.positions||[];
+  document.getElementById("pPos").innerHTML = pos.length ? `
+    <thead><tr><th>代码</th><th>名称</th><th>板块</th><th>数量</th><th>成本价</th><th>现价</th>
+      <th>今日</th><th>市值</th><th>浮动盈亏</th><th>操作</th></tr></thead>
+    <tbody>${pos.map(p=>`<tr>
+      <td><b>${p.code}</b></td><td>${p.name}</td>
+      <td><span class="tag t-em">${p.sector}</span></td>
+      <td>${p.shares.toLocaleString()}</td>
+      <td>${PN(p.avg_cost,3)}</td><td><b>${PN(p.price,3)}</b></td>
+      <td class="${PCLS(p.pct_today)}">${p.pct_today==null?"—":PS(p.pct_today)+"%"}</td>
+      <td>${PN(p.market_value,0)}</td>
+      <td class="${PCLS(p.pnl)}"><b>${PS(p.pnl)}</b> (${PS(p.pnl_pct)}%)</td>
+      <td><button class="btn red btn-xs" data-sell="${p.code}">全卖</button>
+          <button class="btn ghost btn-xs" data-half="${p.code}">卖半</button></td></tr>`).join("")}</tbody>`
+    : `<tbody><tr><td class="empty">空仓。点下方「一键跟单建仓」按 v5 定案配比买入，
+       或在上面输入代码自己下单。</td></tr></tbody>`;
+
+  document.querySelectorAll("[data-sell]").forEach(b=>b.onclick=()=>pSell(b.dataset.sell,1));
+  document.querySelectorAll("[data-half]").forEach(b=>b.onclick=()=>pSell(b.dataset.half,0.5));
+
+  // 板块
+  const secs=d.sectors||[];
+  document.getElementById("pSectorBar").innerHTML = secs.length ? secs.map(x=>`
+    <div style="display:flex;align-items:center;gap:10px;margin:6px 0">
+      <div style="width:76px;font-size:12.5px;color:#cfd4da">${x.sector}</div>
+      <div class="bar" style="flex:1;margin:0">
+        <i style="width:${Math.min(x.weight,100)}%;background:linear-gradient(90deg,#1a73e8,#42a5f5)"></i>
+        <span>${PN(x.value,0)} 元 · ${x.weight}%</span></div></div>`).join("")
+    : `<div class="pnote">空仓，无板块分布。</div>`;
+
+  // 净值曲线
+  pChart(d.snapshots||[], d);
+
+  // 流水
+  const tr=d.trades||[];
+  document.getElementById("pTrades").innerHTML = tr.length ? `
+    <thead><tr><th>时间</th><th>方向</th><th>代码</th><th>名称</th><th>数量</th>
+      <th>成交价</th><th>金额</th><th>佣金</th><th>印花税</th><th>已实现盈亏</th></tr></thead>
+    <tbody>${tr.map(t=>`<tr>
+      <td style="font-size:11.5px;color:#8b9199">${t.ts}</td>
+      <td><b class="${t.side==="买入"?"up":"down"}">${t.side}</b></td>
+      <td>${t.code}</td><td>${t.name}</td><td>${t.shares.toLocaleString()}</td>
+      <td>${PN(t.price,3)}</td><td>${PN(t.amount,2)}</td>
+      <td>${PN(t.fee,2)}</td><td>${PN(t.tax,2)}</td>
+      <td class="${PCLS(t.pnl)}">${t.pnl==null?"—":PS(t.pnl)+" ("+PS(t.pnl_pct)+"%)"}</td></tr>`).join("")}</tbody>`
+    : `<tbody><tr><td class="empty">暂无交易记录</td></tr></tbody>`;
+
+  // 快捷代码 chip
+  const hot=[...new Set([...(d.plan||[]).map(x=>x.code),
+                         ...(d.positions||[]).map(x=>x.code)])];
+  document.getElementById("pChips").innerHTML =
+    hot.map(c=>`<span class="chip" data-p="${c}">${c}</span>`).join("");
+  document.querySelectorAll("#pChips .chip").forEach(c=>
+    c.onclick=()=>{document.getElementById("pCode").value=c.dataset.p; pQuote();});
+}
+
+function pChart(sn, d){
+  const box=document.getElementById("pChart"), note=document.getElementById("pChartNote");
+  if(sn.length<2){
+    // 快照不足：退回「今日账户 vs 沪深300」对比，第一天也有东西看
+    const me=d.total_pnl_pct||0, base=(d.hs300&&d.hs300.pct)||0;
+    const w=v=>Math.min(Math.abs(v)/Math.max(Math.abs(me),Math.abs(base),0.5)*46,48);
+    box.innerHTML=`<div class="chart" style="height:auto;padding:18px">
+      <div style="font-size:12.5px;color:#8b9199;margin-bottom:12px">
+        账户今日 ${PS(me)}%　·　沪深300 今日 ${PS(base)}%　·
+        超额 ${PS(me-base)}pp</div>
+      ${[["我的账户",me,"#ff9800"],["沪深300",base,"#42a5f5"]].map(([nm,v,c])=>`
+        <div style="display:flex;align-items:center;gap:10px;margin:8px 0">
+          <div style="width:70px;font-size:12.5px;color:#cfd4da">${nm}</div>
+          <div class="bar" style="flex:1;margin:0;height:22px">
+            <i style="width:${w(v)}%;left:${v>=0?50:50-w(v)}%;background:${c}"></i>
+            <span class="${PCLS(v)}">${PS(v)}%</span></div></div>`).join("")}
+      <div style="text-align:center;font-size:11.5px;color:#6b7280;margin-top:10px">
+        — 0 —</div></div>`;
+    note.innerHTML=`净值曲线需要跨交易日积累：建仓日起每天自动记一次快照（含沪深300 点位），
+      攒够 2 天就能画出真实曲线。上面先用<b>今日涨跌对比</b>顶着。`;
+    return;
+  }
+  // 折线：账户 vs 基准，都归一化到建仓日 = 0
+  const W=880,H=220,P=34;
+  const e0=sn[0].equity, b0=sn[0].hs300;
+  const rs=sn.map(x=>({d:x.date, a:(x.equity/e0-1)*100,
+                       b:(b0&&x.hs300)?(x.hs300/b0-1)*100:null}));
+  const all=rs.flatMap(r=>[r.a,r.b]).filter(v=>v!=null);
+  let lo=Math.min(...all,0), hi=Math.max(...all,0);
+  const pad=(hi-lo)*0.15||0.5; lo-=pad; hi+=pad;
+  const X=i=>P+i*(W-2*P)/Math.max(rs.length-1,1);
+  const Y=v=>H-P-(v-lo)/(hi-lo)*(H-2*P);
+  const line=(k,c)=>rs.map((r,i)=>`${i?"L":"M"}${X(i).toFixed(1)},${Y(r[k]).toFixed(1)}`).join(" ");
+  box.innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    ${[0,.5,1].map(t=>{const v=lo+(hi-lo)*t;
+      return `<line x1="${P}" x2="${W-P}" y1="${Y(v)}" y2="${Y(v)}"
+        stroke="#262d36" stroke-width="1"/>
+        <text x="${P-6}" y="${Y(v)+4}" fill="#6b7280" font-size="10"
+          text-anchor="end">${v.toFixed(1)}%</text>`;}).join("")}
+    <path d="${line("b","")}" fill="none" stroke="#42a5f5" stroke-width="1.8"
+      stroke-dasharray="5 3" opacity=".85"/>
+    <path d="${line("a","")}" fill="none" stroke="#ff9800" stroke-width="2.2"/>
+    ${rs.map((r,i)=>`<circle cx="${X(i)}" cy="${Y(r.a)}" r="2.6" fill="#ff9800"/>`).join("")}
+    ${rs.map((r,i)=>i%Math.ceil(rs.length/6)===0||i===rs.length-1
+      ?`<text x="${X(i)}" y="${H-10}" fill="#6b7280" font-size="9.5"
+         text-anchor="middle">${r.d.slice(5)}</text>`:"").join("")}
+  </svg>
+  <div style="display:flex;gap:16px;font-size:12px;margin-top:8px;padding-left:6px">
+    <span><i style="display:inline-block;width:16px;height:2.5px;background:#ff9800;
+      vertical-align:middle;margin-right:5px"></i>我的账户</span>
+    <span><i style="display:inline-block;width:16px;height:2.5px;background:#42a5f5;
+      vertical-align:middle;margin-right:5px"></i>沪深300</span>
+  </div>`;
+  note.innerHTML=`建仓日 ${sn[0].date}（沪深300 ${PN(b0,2)}）起算，两条线都归零到同一起点。
+    ${sn.length} 个交易日快照，每次下单会自动补记当天。`;
+}
+
+/* ── 查价 + 下单 ── */
+async function pQuote(){
+  const code=document.getElementById("pCode").value.trim(), box=document.getElementById("pQuoteBox");
+  if(!/^\d{6}$/.test(code)){ box.innerHTML=`<div class="qerr">请输入 6 位数字代码</div>`; return; }
+  box.innerHTML=`<div class="qbox">查价中…</div>`;
+  let q; try{ q=await J("/api/paper/quote?code="+code); }
+  catch(e){ box.innerHTML=`<div class="qbox bad"><div class="qerr">查价失败：${e}（需要后端服务）</div></div>`; return; }
+  if(q.error&&q.price==null){ box.innerHTML=`<div class="qbox bad"><div class="qerr">${q.error}</div></div>`; return; }
+
+  const held=(window.__PAPER__&&window.__PAPER__.positions||{})[code];
+  box.innerHTML=`<div class="qbox ${q.ok?"":"bad"}">
+    <div class="qhead">
+      <span class="nm">${q.name||code} <span style="font-size:12px;color:#8b9199">${code}</span></span>
+      <span class="px ${PCLS(q.pct)}">${PN(q.price,3)}</span>
+      <span class="${PCLS(q.pct)}" style="font-size:13px">${PS(q.pct)}%</span>
+      ${q.etf?`<span class="tag t-em">ETF · 免印花税</span>`:`<span class="tag t-page">股票</span>`}
+      ${q.trading?`<span class="tag t-xq">盘中实时</span>`:`<span class="tag t-news">非交易时段·收盘价</span>`}
+    </div>
+    <div class="qmeta">
+      <span>昨收 ${PN(q.prev_close,3)}</span>
+      <span>涨停 ${PN(q.limit_up,3)}</span>
+      <span>跌停 ${PN(q.limit_down,3)}</span>
+      <span>买入价（含滑点）<b>${PN(q.buy_price,4)}</b></span>
+      <span>1 手成本 <b>${PN(q.lot_cost,2)}</b> 元</span>
+      ${held?`<span>已持有 <b>${held.shares}</b> 份 @ ${PN(held.avg_cost,3)}</span>`:""}
+    </div>
+    ${q.error?`<div class="qerr">⛔ ${q.error}</div>`:`
+    <div class="pform">
+      <div class="seg"><button id="sgBuy" class="on">买入</button><button id="sgSell">卖出</button></div>
+      <div class="seg"><button id="smSh" class="on">按数量</button><button id="smAmt">按金额</button></div>
+      <input type="number" id="pVal" placeholder="按数量：整手" value="100" step="100" min="100">
+      <button class="btn" id="pGo">提交</button>
+      <span style="font-size:11.5px;color:#6b7280">数量须为 100 的整数倍；按金额则自动向下取整到整手</span>
+    </div>
+    <div id="pMsg"></div>`}
+  </div>`;
+
+  const bb=document.getElementById("sgBuy"), sb=document.getElementById("sgSell"),
+        sh=document.getElementById("smSh"), am=document.getElementById("smAmt"),
+        vi=document.getElementById("pVal");
+  let side="buy", mode="shares";
+  const sync=()=>{
+    bb.classList.toggle("on",side==="buy"); sb.classList.toggle("on",side==="sell");
+    sh.classList.toggle("on",mode==="shares"); am.classList.toggle("on",mode==="amount");
+    vi.step = mode==="shares"?"100":"0.01";
+    vi.placeholder = mode==="shares"?"手数 ×100，如 500":"金额（元），如 8000";
+    document.getElementById("pGo").className = "btn"+(side==="sell"?" red":"");
+    document.getElementById("pGo").textContent = (side==="buy"?"买入 ":"卖出 ")+(q.name||code);
+  };
+  bb.onclick=()=>{side="buy";sync();}; sb.onclick=()=>{side="sell";sync();};
+  sh.onclick=()=>{mode="shares";vi.value=100;sync();};
+  am.onclick=()=>{mode="amount";vi.value=8000;sync();};
+  sync();
+  document.getElementById("pGo").onclick=async()=>{
+    const btn=document.getElementById("pGo"), msg=document.getElementById("pMsg");
+    btn.disabled=true; msg.innerHTML=`<div class="pnote">提交中…</div>`;
+    try{
+      const r=await J("/api/paper/order",{method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({code, side, mode, value:parseFloat(vi.value)||0})});
+      msg.innerHTML=`<div class="${r.ok?"note":"qerr"}" style="margin-top:10px">${r.msg||r.error||""}</div>`;
+      if(r.state){ window.__PAPER__=r.state; pRender(r.state); }
+    }catch(e){ msg.innerHTML=`<div class="qerr">下单失败：${e}</div>`; }
+    btn.disabled=false;
+  };
+}
+
+async function pSell(code, ratio){
+  const st=window.__PAPER__; if(!st) return;
+  const p=(st.positions||[]).find(x=>x.code===code); if(!p) return;
+  let n=Math.floor(p.shares*ratio/100)*100;
+  if(n<100){ alert("不足 1 手，无法卖出"); return; }
+  if(!confirm(`确定卖出 ${p.name} ${n} 份？\n当前现价 ${PN(p.price,3)}，成本 ${PN(p.avg_cost,3)}`)) return;
+  const r=await J("/api/paper/order",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({code, side:"sell", mode:"shares", value:n})});
+  if(r.state){ window.__PAPER__=r.state; pRender(r.state); }
+  else alert(r.msg||"卖出失败");
+}
+
+document.getElementById("pQuote").addEventListener("click",pQuote);
+document.getElementById("pCode").addEventListener("keydown",e=>{if(e.key==="Enter")pQuote();});
+document.getElementById("pRefresh").addEventListener("click",pLoad);
+document.getElementById("pPlan").addEventListener("click",async()=>{
+  const cur = window.__PAPER__ || {};
+  const nPlan = (cur.plan||[]).length;
+  if(!confirm(`一键跟单建仓？\n\n计划来源：${cur.plan_source||"读取中…"}\n`+
+      `将按实时价买入 ${nPlan||17} 只标的。\n\n`+
+      `注：跟的是【当日信号】，不是写死的旧清单。`)) return;
+  const b=document.getElementById("pPlan"); b.disabled=true; b.textContent="建仓中…";
+  try{
+    const r=await J("/api/paper/plan",{method:"POST"});
+    const ok=(r.log||[]).filter(x=>x.ok).length;
+    let h=`<div class="note" style="margin-top:12px">建仓完成：<b>${ok}/${(r.log||[]).length}</b> 只成功。
+        ${(r.log||[]).filter(x=>!x.ok).map(x=>`<br>· ${x.code} ${x.name}：${x.msg}`).join("")}
+        ${r.source?`<br>计划来源：<b>${r.source}</b>`:""}</div>`;
+    if(r.warn) h += `<div class="alert" style="margin-top:10px"><b>注意</b><br>${r.warn}</div>`;
+    document.getElementById("pPlanLog").innerHTML=h;
+    if(r.state){ window.__PAPER__=r.state; pRender(r.state); }
+  }catch(e){ document.getElementById("pPlanLog").innerHTML=`<div class="qerr">${e}</div>`; }
+  b.disabled=false; b.textContent="一键跟单建仓";
+});
+/* 跟单说明按当日信号回填，避免写死后与信号打架 */
+(function(){
+  const el=document.getElementById("pPlanNote"); if(!el) return;
+  const set=(sig,src)=>{
+    if(!sig){ el.innerHTML=`按 v5 定案配比建仓。跟单用<b>实时价</b>成交，
+      与信号里的昨日收盘价会有偏差。`; return; }
+    const pk=(sig.picks||[]), nf=pk.filter(x=>x.leg==="防御仓").length,
+          nh=pk.filter(x=>x.leg==="热点仓").length, ne=(sig.etfs||[]).length;
+    el.innerHTML=`跟的是<b>${sig.sig_date} 当日信号</b>（因子基准 <b>${sig.bar_date}</b> 收盘，
+      共 ${nf} 只防御仓 + ${nh} 只热点仓 + ${ne} 只 ETF）。
+      跟单用<b>实时价</b>成交，与信号里的收盘价会有偏差。`;
+  };
+  const s0=window.__PAPER__||window.__PAPER_SNAP__;
+  if(s0&&s0.plan_source){ set(window.__SIGNAL__, s0.plan_source); }
+  // 离线版（file:// 双击打开）不要再 fetch 绝对路径 —— 浏览器直接报
+  // `URL scheme "file" is not supported`，控制台一片红，而内嵌数据本来就够用。
+  if(location.protocol !== "file:"){
+    fetch("/api/daily_signal").then(r=>r.json()).then(set).catch(()=>set(window.__SIGNAL__));
+  }else{
+    set(window.__SIGNAL__);
+  }
+})();
+document.getElementById("pReset").addEventListener("click",async()=>{
+  if(!confirm("清空账户，恢复 200,000 元现金？所有持仓与流水将被删除，不可恢复。")) return;
+  const r=await J("/api/paper/reset",{method:"POST"});
+  if(r.state){ window.__PAPER__=r.state; pRender(r.state);
+    document.getElementById("pPlanLog").innerHTML=`<div class="note">${r.msg}</div>`; }
+});
+pLoad();
+
+</script>
+
+
+</body>
+</html>

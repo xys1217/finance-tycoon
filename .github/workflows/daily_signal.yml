@@ -1,0 +1,123 @@
+name: 每日 A 股交易信号
+
+# ---------------------------------------------------------------------------
+# 为什么需要它
+#
+# 沙箱里的平台定时任务实测跑不通：任务状态被更新成「已执行」，
+# 但脚本跑在与本沙箱隔离的环境里（那里没有 /workspace），
+# 于是没有产物、没有日志、也不报错 —— 静默失败，最危险的一种。
+#
+# GitHub Actions 的 runner 也是隔离环境，但它先 checkout 代码，
+# 所以 /home/runner/work/... 下面真的有仓库，脚本能跑。
+#
+# 时区：GitHub cron 一律用 UTC。08:30 北京时间 = 00:30 UTC。
+# 只在工作日跑（1-5），配合脚本内的交易日历判断跳过法定节假日。
+# ---------------------------------------------------------------------------
+on:
+  schedule:
+    - cron: '30 0 * * 1-5'        # 每天 08:30 CST，周一至周五
+  workflow_dispatch:               # 允许在网页上手动点一次（排障/补跑用）
+
+permissions:
+  contents: write                  # 需要把生成结果 commit 回仓库
+
+concurrency:
+  group: daily-signal
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30            # 首次拉 641 只 K 线约 90 秒，30 分钟足够
+
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 装依赖
+        # 只装信号生成与静态构建需要的包。
+        # flask / playwright 是本地 server 与测试用的，CI 里不需要。
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 数据源连通性自检
+        # 关键步骤：runner 在境外，访问东方财富/新浪/腾讯可能受限。
+        # 不先验证就跑，等于每天早上安静地失败一次——任务还是绿的，
+        # 但信号永远是昨天的。这一步不可跳过。
+        id: probe
+        continue-on-error: true
+        run: |
+          python tools/check_datasource.py
+
+      - name: 连通性失败就明确炸出来
+        if: steps.probe.outcome == 'failure'
+        run: |
+          echo "::error::行情数据源在此网络环境下不可用，信号生成会失败。"
+          echo "::error::GitHub Actions 境外 IP 访问国内行情接口常被限流。"
+          echo "::error::解决方案：改用国内服务器挂 cron，或在 Actions 上接自托管 runner。"
+          exit 1
+
+      - name: 生成当日信号并刷新离线版
+        id: signal
+        run: |
+          bash web/run_daily_signal.sh
+
+      - name: 部署到 GitHub Pages 目录
+        # 把离线版拷到 docs/，Pages 指向 /docs 后，
+        # 打开 https://<用户名>.github.io/<仓库名>/ 就是当日信号，
+        # 不用下载、不用起 server。
+        run: |
+          mkdir -p docs
+          cp web/index_static.html docs/index.html
+          cp web/api/daily_signal.json docs/daily_signal.json
+          ls -la docs/
+
+      - name: 写运行摘要
+        if: always()
+        run: |
+          {
+            echo "## 每日信号 $(date '+%Y-%m-%d %H:%M') CST"
+            echo
+            if [ -f web/api/daily_signal.json ]; then
+              python - <<'PY'
+          import json
+          d = json.load(open("web/api/daily_signal.json"))
+          f = d["data_freshness"]
+          rb = d["rebalance"]
+          ch = d["changes"]
+          s = d["summary"]
+          print(f"- 信号日 **{d['sig_date']}** ｜ 因子基准 bar_date **{d['bar_date']}**")
+          print(f"- 数据新鲜度：stale={f['stale']} ｜ bars_behind={f['bars_behind']}")
+          print(f"- 动作：**{ch['action']}**")
+          print(f"- 下次个股调仓：**{rb['next_stock_rebalance']}**")
+          print(f"- 投入 {s['invested']:,.0f} 元（{s['invested_pct']}%）｜ 现金 {s['cash']:,.0f} 元（{s['cash_pct']}%）")
+          sl = [x for x in d.get("stop_loss_scan", []) if x.get("hit_stop")]
+          if sl:
+              print()
+              print("### ⚠ 触发止损")
+              for x in sl:
+                  print(f"- {x['code']} {x.get('name','')} 浮亏 {x.get('pnl_pct')}%")
+          PY
+            else
+              echo "信号文件未生成，查看上一步日志"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 提交产物
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A daily/ docs/ web/api/daily_signal.json web/api/positions.json
+          if git diff --cached --quiet; then
+            echo "无变化（非交易日或信号未变）"
+          else
+            git commit -m "每日信号 $(date '+%Y-%m-%d')"
+            git push
+          fi

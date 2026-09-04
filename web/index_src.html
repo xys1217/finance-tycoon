@@ -379,7 +379,14 @@ document.querySelectorAll(".tab").forEach(t=>{
 // 全都点了没反应（catch 到异常但不说人话）。2026-09-03 前端交互测试才发现。
 const J = async (u, opt) => {
   const r = await fetch(u, opt);
-  const t = await r.text();
+  // 兼容只有 json()、没有 text() 的假 Response。
+  // 静态离线版的 fetch 劫持层历史上只实现了 json()，这里直接 r.text()
+  // 会抛 "r.text is not a function"，信号卡片显示「加载失败」，
+  // 而页面其它部分照常渲染 —— 于是「有内容、无 JS 错误」的检查全过，
+  // 唯独当日信号是空的。先试 text()，没有就退回 json()。
+  const t = (typeof r.text === "function")
+    ? await r.text()
+    : JSON.stringify(await r.json());
   try {
     return JSON.parse(t);
   } catch {

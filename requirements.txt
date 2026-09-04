@@ -1,0 +1,13 @@
+# 信号生成 + 静态离线版构建所需的最小依赖。
+#
+# 本地跑网页/测试还需要另外两个，这里不装（CI 用不到）：
+#   flask       —— server.py 本地服务
+#   playwright  —— test_ui_flow.py / test_offline.py 前端测试
+#
+# 版本下限按本仓库实际跑通的版本写，不锁死上限，免得 akshare 更新后被卡住。
+
+akshare>=1.18.0
+pandas>=2.0.0
+numpy>=1.24.0
+requests>=2.31.0
+curl_cffi>=0.6.0
